@@ -1,0 +1,67 @@
+# Shadow Developer — Agent Execution Graph
+# Triggered on: every new developer prompt submitted to the interceptor
+
+name: audit_pipeline
+version: "1.0.0"
+description: >
+  Parallel spec generation → adversarial audit → reconciliation pipeline.
+  Runs on every developer feature prompt before any code is synthesised.
+
+trigger:
+  type: webhook
+  endpoint: /api/v1/intercept
+  method: POST
+
+steps:
+  - id: parse_context
+    name: "Pull Global Architectural Context"
+    agent: shadow_auditor
+    tool: pull_global_context
+    input:
+      project_id: "{{ trigger.body.project_id }}"
+    output: global_context
+
+  - id: feature_spec_gen
+    name: "Kiro Feature Agent — Draft Feature Spec"
+    parallel_group: spec_generation
+    agent: kiro_feature_agent          # built-in Kiro agent
+    input:
+      prompt: "{{ trigger.body.prompt }}"
+      context: "{{ steps.parse_context.output.global_context }}"
+    output: feature_spec
+
+  - id: adversarial_spec_gen
+    name: "Shadow Audit Agent — Generate Adversarial Spec"
+    parallel_group: spec_generation
+    agent: shadow_auditor
+    tool: run_security_scan
+    input:
+      prompt: "{{ trigger.body.prompt }}"
+      context: "{{ steps.parse_context.output.global_context }}"
+    output: adversarial_spec
+
+  - id: reconcile
+    name: "Orchestration Validator — Reconcile Specs"
+    depends_on: [feature_spec_gen, adversarial_spec_gen]
+    agent: validator
+    tool: diff_specs
+    input:
+      feature_spec: "{{ steps.feature_spec_gen.output.feature_spec }}"
+      adversarial_spec: "{{ steps.adversarial_spec_gen.output.adversarial_spec }}"
+    output: audit_result
+
+  - id: generate_tests
+    name: "Auto-Generate Integration & Regression Tests"
+    depends_on: [reconcile]
+    agent: validator
+    tool: generate_tests
+    condition: "{{ steps.reconcile.output.audit_result.status != 'failed' }}"
+    input:
+      audit_result: "{{ steps.reconcile.output.audit_result }}"
+    output: test_suite
+
+  - id: emit_result
+    name: "Emit Final Audit Result"
+    depends_on: [generate_tests]
+    type: response
+    body: "{{ steps.reconcile.output.audit_result }}"

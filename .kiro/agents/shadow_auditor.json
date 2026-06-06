@@ -1,0 +1,28 @@
+{
+  "name": "shadow_auditor",
+  "version": "1.0.0",
+  "description": "Generates adversarial specifications against incoming feature prompts by pulling global architectural context and applying OWASP + API drift rules.",
+  "system_prompt": "You are the Shadow Audit Agent. Your sole purpose is adversarial: for every feature specification you receive, generate a comprehensive list of ways it could break the existing system. Focus on: (1) Security vulnerabilities — OWASP Top 10, injection risks, broken auth, missing rate limits; (2) API drift — routes that would collide with or alter existing contracts; (3) Schema collisions — model/table changes that require migrations; (4) Dependency conflicts — version mismatches in requirements. Be specific. Cite the existing component. Suggest a concrete remediation. Do NOT generate implementation code — only generate the adversarial specification.",
+  "tools": [
+    {
+      "name": "pull_global_context",
+      "description": "Pulls the latest architectural snapshot from the OpenSearch vector store for a given project_id.",
+      "parameters": {
+        "project_id": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "run_security_scan",
+      "description": "Runs the OWASP rule set against the incoming prompt text.",
+      "parameters": {
+        "prompt": { "type": "string", "required": true }
+      }
+    }
+  ],
+  "model": {
+    "provider": "bedrock",
+    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "temperature": 0.2,
+    "max_tokens": 4096
+  }
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "label": "Clean prompt — should PASS",
+    "request": {
+      "prompt": "Add a GET /reports/summary endpoint that returns aggregated sales data for the last 30 days with rate limiting at 60 requests per minute",
+      "project_id": "ecommerce-platform-v2",
+      "author": "hamid.khan",
+      "branch": "feature/sales-reports"
+    }
+  },
+  {
+    "label": "Webhook without signature — should trigger HIGH security conflict",
+    "request": {
+      "prompt": "Add a new POST /payments/webhook route that processes Stripe subscription lifecycle events and updates the user's subscription status in the database",
+      "project_id": "ecommerce-platform-v2",
+      "author": "hamid.khan",
+      "branch": "feature/stripe-webhooks"
+    }
+  },
+  {
+    "label": "Webhook with signature verification — should PASS",
+    "request": {
+      "prompt": "Add a POST /payments/webhook route that verifies the Stripe HMAC signature before processing subscription lifecycle events",
+      "project_id": "ecommerce-platform-v2",
+      "author": "hamid.khan",
+      "branch": "feature/stripe-webhooks-secure"
+    }
+  },
+  {
+    "label": "Raw SQL injection risk — should FAIL (critical)",
+    "request": {
+      "prompt": "Write a search endpoint that uses cursor.execute to run a dynamic raw SQL query filtering orders by customer name",
+      "project_id": "ecommerce-platform-v2",
+      "author": "dev-anon",
+      "branch": "feature/order-search"
+    }
+  },
+  {
+    "label": "Auth bypass risk — should FAIL (critical)",
+    "request": {
+      "prompt": "Create a public admin dashboard endpoint that bypasses auth and returns all user data for internal debugging",
+      "project_id": "ecommerce-platform-v2",
+      "author": "dev-anon",
+      "branch": "feature/debug-dashboard"
+    }
+  },
+  {
+    "label": "Schema collision — should flag NEEDS_REVISION",
+    "request": {
+      "prompt": "Modify the User model to add a two_factor_enabled boolean field and a phone_number field for SMS-based 2FA",
+      "project_id": "ecommerce-platform-v2",
+      "author": "hamid.khan",
+      "branch": "feature/2fa"
+    }
+  },
+  {
+    "label": "Dependency version conflict — should flag medium conflict",
+    "request": {
+      "prompt": "Upgrade stripe==10.0.0 to use the new Subscription V2 API with metered billing support",
+      "project_id": "ecommerce-platform-v2",
+      "author": "hamid.khan",
+      "branch": "feature/stripe-v2"
+    }
+  }
+]
