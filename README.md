@@ -345,125 +345,175 @@ Seven pre-built scenarios in `data/demo_prompts.json`, loadable via `POST /api/v
 
 ## Video Script
 
-> Use this as your talking track for the demo video. Each section maps to a screen you should have open. The step notes in the IDE bottom strip follow this same order.
+> Your full talking track. Spoken lines are in quotes — say them naturally, don't read them word for word. Direction notes tell you what to have on screen. Total runtime: ~4.5 minutes.
+>
+> **Before you hit record:** run `curl -X POST http://localhost:8000/api/v1/seed` to populate the history tab, open the browser to `http://localhost:8000`, hide extensions, set resolution to 1920x1080.
 
 ---
 
-### Opening (0:00 – 0:20)
+### The Hook — Start here, no screen yet (0:00 – 0:30)
 
-Open `http://localhost:8000` — the landing page.
+*No screen. Just you talking to camera or voiceover on a black frame.*
 
-*"AI coding agents are fast. But fast and insecure is worse than slow. Shadow Developer is a security layer that sits between the developer's intent and the code that gets written. It audits the specification before a single line is generated."*
-
----
-
-### The Problem (0:20 – 0:45)
-
-Stay on the landing page. Point to the code preview block.
-
-*"Here's a real example. A developer asks an AI agent to add a Stripe webhook. The agent writes the code. It compiles. But look — a hardcoded API key, a raw SQL query that's wide open to injection, and MD5 being used as a security hash. None of this was caught. Shadow Developer catches all three before generation even starts."*
-
----
-
-### Opening the IDE (0:45 – 1:00)
-
-Click "Open IDE" — navigate to `http://localhost:8000/ide`.
-
-*"This is the Shadow Developer IDE. It looks like a standard code editor, but it has a live security scanner running behind every file."*
-
-Point to the file tree on the left.
-
-*"These badges tell you the health of each file at a glance. webhook.py has 4 issues. charge.py is clean."*
+> "I want to tell you about a Tuesday afternoon that probably cost a company about forty thousand dollars.
+>
+> A developer on their team was using an AI coding agent. Moving fast — Kiro, Copilot, whatever. They typed: 'add a Stripe webhook that updates subscription status.' The agent wrote the code in seconds. It looked fine. It passed the linter. The PR got merged.
+>
+> Three weeks later, someone noticed the webhook had no signature verification. Any request from anyone could update any user's subscription. The hardcoded Stripe key in the file had already been rotated by then — but not before it hit the logs.
+>
+> The code was never wrong. The *intent* was wrong. And nobody caught it because the review happened after the code existed, not before.
+>
+> That's what Shadow Developer fixes."
 
 ---
 
-### Live Code Scan (1:00 – 1:30)
+### Introduce the Idea (0:30 – 1:00)
 
-Click `webhook.py` in the sidebar — the file loads and scans automatically.
+*Open `http://localhost:8000` — the landing page.*
 
-*"When you open a file, Shadow Developer scans it immediately. The right panel shows the findings. Four issues — two critical, one high, one high. Each one has an exact line number, a rule ID, and a fix."*
+> "The idea is straightforward. Right now, AI agents generate code and then we audit it. Shadow Developer flips that. It audits the *specification* — the feature description — before any code is written at all.
+>
+> Think of it as a shadow agent that runs alongside your main coding agent. Every time you describe a feature, Shadow Developer reads it, checks it against your codebase's security rules, your existing API contracts, your database schema — and if something's wrong, it blocks generation before the mistake exists."
 
-Hover over a finding card to show the tooltip.
+*Point to the headline on the landing page.*
 
-*"The gutter markers turn red on dangerous lines. You see exactly where the threat is."*
+> "Catch security flaws before the code exists. That's the whole idea."
 
----
+*Scroll down slowly to the code preview block.*
 
-### Demo Scenario 1 — SQL Injection (1:30 – 2:00)
-
-Click "SQL Injection" in the bottom notes strip.
-
-*"Now I'll show you something more powerful — real-time detection. Watch the right panel as the code types."*
-
-Let the auto-type run. When the finding appears mid-type:
-
-*"There it is. The scanner caught cursor.execute with an f-string on line 8 before the file was even finished being written. Rule INJ-001, severity CRITICAL."*
+> "And this — this is a real example of what it catches. A webhook.py file with three critical issues highlighted. Hardcoded API key, SQL injection via an f-string query, MD5 hash used for security. All flagged. All with rule IDs and fixes. We'll see this live in a second."
 
 ---
 
-### Demo Scenario 2 — Auth Bypass (2:00 – 2:30)
+### The IDE — First Look (1:00 – 1:20)
 
-Click "Auth Bypass".
+*Click "Open IDE" — `http://localhost:8000/ide` loads.*
 
-*"This scenario shows what happens when a developer takes a shortcut. DEBUG=True. A TODO comment that says skip auth for now. And os.system with shell=True — that's a command injection waiting to happen. Shadow Developer flags all three."*
+> "This is the Shadow Developer IDE. It runs in the browser, looks like a standard code editor, but it has a live security scanner behind every file.
+>
+> Look at the sidebar. Each file has a badge — webhook.py shows four issues, charge.py is clean. The moment you open a file, it scans automatically. No buttons to press."
 
-Point to the severity badges in the right panel.
+*Click `webhook.py` — findings load in the right panel.*
 
-*"Critical in red. High in orange. Every finding has a concrete fix, not just a warning."*
+> "Four findings. Two critical, two high. Right panel breaks them down — rule ID, line number, what the problem is, and exactly how to fix it. The gutter turns red on the dangerous lines. You don't have to hunt for it."
 
----
+*Hover over a finding card slowly.*
 
-### Demo Scenario 3 — Hardcoded Keys (2:30 – 3:00)
-
-Click "Hardcoded Keys".
-
-*"This is one of the most common causes of production breaches — credentials committed to source code. Stripe API key, AWS access key, database password, all sitting in plain text. Shadow Developer catches every one of them. And critically — it never logs or returns the actual secret value. Only the variable name."*
+> "Hover over any card and you get the full detail. This is real static analysis — not suggestions, not style warnings. Actual security vulnerabilities."
 
 ---
 
-### Spec Audit Panel (3:00 – 3:40)
+### Demo 1 — SQL Injection, Real Time (1:20 – 1:55)
 
-After the Hardcoded Keys demo finishes, the IDE auto-switches to the Spec Audit tab.
+*Click "SQL Injection" in the bottom notes bar.*
 
-*"The Spec Audit is a different layer. Instead of scanning written code, it audits a feature description before any code is generated at all. This is the core of Shadow Developer — it's why it's spec-driven."*
+> "Now here's what makes this interesting. Watch the right panel while the code types."
 
-The audit result appears. Point to the conflicts.
+*Let the auto-type run. Don't talk over it — let the finding appear mid-type.*
 
-*"The audit engine checked this prompt against the project's registered API routes, existing data models, and OWASP rules. It found a missing webhook signature check and flagged it as high severity before a single line was written."*
+*When the CRITICAL badge appears in the right panel:*
 
----
-
-### Safe Code (3:40 – 4:00)
-
-Click "Safe Code".
-
-*"For balance — here's what a clean file looks like. Environment variables for credentials, SHA-256 instead of MD5, parameterized queries, proper subprocess calls. Zero findings. Shadow Developer doesn't flag things that are actually safe."*
+> "There. The scanner caught it on line 8 — cursor.execute with an f-string interpolating user input directly into a SQL query. Rule INJ-001. CRITICAL severity. It didn't wait for the file to finish. It flagged it as it was being written.
+>
+> That's the behaviour you want. Not a PR comment three days later. Not a SAST scan before deploy. Right here, right now, before the code is committed."
 
 ---
 
-### History Tab (4:00 – 4:15)
+### Demo 2 — Auth Bypass (1:55 – 2:25)
 
-Click the History tab in the right panel.
+*Click "Auth Bypass".*
 
-*"Every audit is persisted to a local SQLite database. You can see the full history — which prompts were flagged, which passed, which author, which branch."*
+> "This one is about developer shortcuts. We've all done it — 'I'll fix the auth later, just need to get this working.' Except later never comes.
+>
+> Watch — DEBUG=True gets flagged immediately. Then a comment that literally says 'skip auth check for now.' And os.system with a user-controlled string — that's remote code execution waiting to happen.
+>
+> Three separate issues. Three different rule categories. All caught in the same file."
+
+*Let the scan complete and point to the right panel.*
+
+> "Critical in red. High in orange. And every single one comes with a specific remediation — not 'fix your auth.' It tells you exactly what to use instead."
 
 ---
 
-### Closing (4:15 – 4:30)
+### Demo 3 — Hardcoded Credentials (2:25 – 2:55)
 
-Navigate back to `http://localhost:8000`.
+*Click "Hardcoded Keys".*
 
-*"Shadow Developer is a meta-layer for AI-driven development. It doesn't replace the agent — it makes the agent accountable. Built on Kiro's spec-driven workflow, backed by AWS Bedrock and OpenSearch in production, and running fully locally with zero config for development. Security before the code. That's the only way to ship fast without shipping broken."*
+> "This is the one that keeps security engineers up at night. Credentials in source code. It's been a known problem for decades and it still happens every single day, because it's just so easy to do when you're moving fast.
+>
+> Stripe key. AWS access key. AWS secret. Database password. All hardcoded, all sitting in plain text, all one `git push` away from being public."
+
+*When findings appear:*
+
+> "Five findings. And notice — Shadow Developer reports the variable name, never the value. It doesn't echo your secrets back at you. That's intentional."
+
+---
+
+### The Spec Audit — Before Code Exists (2:55 – 3:35)
+
+*The IDE auto-switches to the Spec Audit tab after the demo completes.*
+
+> "The code scanner is powerful, but it only works on code that already exists. The Spec Audit works *before* code exists — and that's the real innovation here.
+>
+> This is what just ran. The audit engine took that feature description — 'add a SendGrid notification with the API key configured in code' — and checked it against the project's registered routes, existing data models, and OWASP rules.
+>
+> It came back with a high-severity conflict before a single line was written. Missing webhook signature verification. Missing rate limiting. If this prompt had gone straight to the agent, we'd have another webhook.py situation."
+
+*Point to the recommended tests section.*
+
+> "And it doesn't just block. It generates the tests you need to pass before this feature gets merged. Integration test, security test, regression test — all named, all specific."
+
+---
+
+### Demo 4 — Safe Code (3:35 – 3:50)
+
+*Click "Safe Code".*
+
+> "I want to show you the other side too. This is what clean code looks like through Shadow Developer's eyes.
+>
+> Environment variables. SHA-256. Parameterized ORM queries. Cryptographically random tokens. Subprocess with a list, not a shell string."
+
+*Wait for the scan to complete — zero findings.*
+
+> "Zero findings. Status bar goes green. Shadow Developer is not a false-positive machine. If the code is actually safe, it says so."
+
+---
+
+### History — The Audit Trail (3:50 – 4:05)
+
+*Click the History tab in the right panel.*
+
+> "Every single audit is stored. Who ran it, which branch, which project, what the prompt was, how many conflicts were found.
+>
+> In a team setting, this is your audit trail. You can see exactly when a risky prompt was caught, who submitted it, and whether it was revised or blocked. That's accountability built into the workflow."
+
+---
+
+### The Close (4:05 – 4:30)
+
+*Navigate back to `http://localhost:8000`. Hold on the landing page.*
+
+> "We're at a really interesting point in software development right now. AI agents can write code faster than any human. But speed without judgment just means you get to production failure faster.
+>
+> Shadow Developer is a judgment layer. It sits between the developer's intent and the code that gets generated. It uses Kiro's spec-driven approach — the same approach that makes Kiro different — but turns it inward, to audit the spec itself before it becomes code.
+>
+> AWS Bedrock for the LLM agents. OpenSearch for the architectural context store. FastAPI for the interceptor. And Kiro as the orchestration layer that makes all of it work together.
+>
+> The breach on that Tuesday afternoon? Shadow Developer would have caught it on Monday morning, before the PR existed.
+>
+> That's the project."
 
 ---
 
 ### Recording Tips
 
-- Record at 1920x1080, crop the bottom 40px to hide the presenter notes strip
-- Use a browser with no extensions visible in the toolbar
-- Move your mouse deliberately between elements — give each finding card a moment on screen
-- The auto-type speed is intentionally readable — do not fast-forward the demo sections
-- Seed the database first (`curl -X POST http://localhost:8000/api/v1/seed`) so the History tab is populated before you record
+- Do not read the script verbatim — use it as a guide, speak in your own voice
+- Pause for 1–2 seconds after each demo finding appears before speaking — let the viewer register what they're seeing
+- The auto-type demos run at a readable pace — resist the urge to skip ahead
+- Crop the bottom 40px of the recording to hide the presenter notes strip
+- Keep mouse movements slow and intentional — hover over findings, don't just click past them
+- The History tab needs demo data — run `curl -X POST http://localhost:8000/api/v1/seed` before recording
+- Total target length: 4 to 4.5 minutes. Under 5 is perfect for a hackathon submission
 
 ---
 
