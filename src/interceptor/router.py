@@ -100,6 +100,7 @@ async def root():
         <div class="card">
           <h4>📋 Spec Audit</h4>
           <ul>
+            <li><a href="/ide">🖥️ Web IDE — full coding environment</a></li>
             <li><a href="/docs">Swagger UI — try the API live</a></li>
             <li><a href="/redoc">ReDoc — full reference</a></li>
             <li><a href="/api/v1/history">Audit History</a></li>

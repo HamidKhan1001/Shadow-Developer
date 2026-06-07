@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from .router import router
+from .ide import ide_router
 from ..config import get_settings
 from ..database import init_db
 
@@ -55,6 +56,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(ide_router)
 
 
 @app.get("/", include_in_schema=False)
