@@ -3,461 +3,511 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shadow Developer -- IDE</title>
+<title>Shadow Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* ── Reset & base ─────────────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg:        #0d1117;
-    --surface:   #161b22;
-    --surface2:  #21262d;
-    --border:    #30363d;
-    --text:      #e6edf3;
-    --muted:     #8b949e;
-    --blue:      #58a6ff;
-    --green:     #3fb950;
-    --yellow:    #d29922;
-    --red:       #f85149;
-    --orange:    #e3a341;
-    --purple:    #bc8cff;
-    --cyan:      #39d353;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --font-ui:   system-ui, -apple-system, sans-serif;
-  }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); overflow: hidden; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#21262d;--bd:#30363d;
+  --tx:#e6edf3;--mt:#8b949e;--bl:#58a6ff;--gr:#3fb950;
+  --rd:#f85149;--or:#e3a341;--yw:#d29922;--pu:#d2a8ff;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --ui:system-ui,-apple-system,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased}
 
-  /* ── Title bar ────────────────────────────────────────────────── */
-  #titlebar {
-    height: 38px; background: #010409; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; padding: 0 16px; gap: 12px;
-    user-select: none; flex-shrink: 0;
-  }
-  #titlebar .dots { display: flex; gap: 6px; }
-  #titlebar .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
-  #titlebar .dot.red    { background: #ff5f57; }
-  #titlebar .dot.yellow { background: #ffbd2e; }
-  #titlebar .dot.green  { background: #28c840; }
-  #titlebar .title { flex: 1; text-align: center; font-size: 12px; color: var(--muted); letter-spacing: .3px; }
-  #titlebar .badge-ext {
-    font-size: 10px; background: var(--surface2); border: 1px solid var(--border);
-    color: var(--blue); padding: 2px 8px; border-radius: 12px; letter-spacing: .5px;
-  }
+/* ── Title bar ── */
+#titlebar{
+  height:36px;background:#010409;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;padding:0 14px;gap:10px;user-select:none;flex-shrink:0;
+}
+.wdots{display:flex;gap:6px}
+.wdot{width:11px;height:11px;border-radius:50%}
+.wdot.r{background:#ff5f57}.wdot.y{background:#ffbd2e}.wdot.g{background:#28c840}
+#tb-title{flex:1;text-align:center;font-size:11.5px;color:var(--mt);font-family:var(--mono)}
+#tb-badge{
+  font-size:10px;font-family:var(--mono);font-weight:500;letter-spacing:.8px;
+  background:var(--s2);border:1px solid var(--bd);color:var(--bl);
+  padding:2px 10px;border-radius:12px;
+}
 
-  /* ── Layout ───────────────────────────────────────────────────── */
-  #layout { display: flex; height: calc(100vh - 38px); }
+/* ── Main layout ── */
+#layout{display:flex;height:calc(100vh - 36px - 36px)}
 
-  /* ── Activity bar ─────────────────────────────────────────────── */
-  #activitybar {
-    width: 48px; background: #010409; border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 4px; flex-shrink: 0;
-  }
-  .act-btn {
-    width: 36px; height: 36px; border-radius: 6px; border: none; background: transparent;
-    color: var(--muted); cursor: pointer; font-size: 16px; display: flex; align-items: center;
-    justify-content: center; transition: all .15s; position: relative;
-  }
-  .act-btn:hover, .act-btn.active { color: var(--text); background: var(--surface2); }
-  .act-btn.active::before {
-    content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
-    width: 2px; height: 20px; background: var(--blue); border-radius: 2px;
-  }
+/* ── Activity bar ── */
+#act{
+  width:46px;background:#010409;border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;flex-shrink:0;
+}
+.abt{
+  width:34px;height:34px;border-radius:6px;border:none;background:transparent;
+  color:#4a5568;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;position:relative;
+}
+.abt:hover{color:var(--tx);background:var(--s2)}
+.abt.on{color:var(--tx);background:var(--s2)}
+.abt.on::before{
+  content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+  width:2px;height:18px;background:var(--bl);border-radius:2px;
+}
 
-  /* ── Sidebar ──────────────────────────────────────────────────── */
-  #sidebar {
-    width: 220px; background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
-  }
-  .sidebar-title {
-    font-size: 10px; letter-spacing: 1.5px; color: var(--muted); padding: 12px 16px 6px;
-    text-transform: uppercase; font-weight: 600;
-  }
-  .file-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
-  .file-item {
-    display: flex; align-items: center; gap: 8px; padding: 4px 16px 4px 28px;
-    font-size: 12px; color: var(--muted); cursor: pointer; transition: background .1s;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .file-item:hover { background: var(--surface2); color: var(--text); }
-  .file-item.active { background: #1f2937; color: var(--text); }
-  .file-item .icon { font-size: 11px; width: 14px; flex-shrink: 0; }
-  .file-item .badge-warn { margin-left: auto; font-size: 9px; background: #3d1c1c; color: var(--red); padding: 1px 5px; border-radius: 8px; }
-  .file-item .badge-ok   { margin-left: auto; font-size: 9px; background: #1a4731; color: var(--green); padding: 1px 5px; border-radius: 8px; }
-  .folder-item {
-    display: flex; align-items: center; gap: 6px; padding: 5px 16px;
-    font-size: 11px; color: var(--muted); cursor: pointer; letter-spacing: .3px;
-  }
-  .folder-item:hover { color: var(--text); }
+/* ── Sidebar ── */
+#sb{
+  width:218px;background:var(--s1);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;
+}
+.sb-title{
+  font-size:10px;letter-spacing:1.5px;color:var(--mt);
+  padding:12px 14px 6px;text-transform:uppercase;font-weight:600;
+}
+.ftree{flex:1;overflow-y:auto;padding:2px 0}
+.fdr{
+  display:flex;align-items:center;gap:5px;padding:4px 14px;
+  font-size:11.5px;color:var(--mt);cursor:pointer;user-select:none;
+}
+.fdr:hover{color:var(--tx)}
+.fi{
+  display:flex;align-items:center;gap:7px;padding:3px 14px 3px 26px;
+  font-size:12px;color:var(--mt);cursor:pointer;transition:background .1s;
+}
+.fi:hover{background:var(--s2);color:var(--tx)}
+.fi.on{background:#1a2030;color:var(--tx)}
+.fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bw{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;flex-shrink:0}
+.bw.warn{background:#2d1212;color:var(--rd)}
+.bw.ok{background:#0f2118;color:var(--gr)}
 
-  /* ── Editor area ──────────────────────────────────────────────── */
-  #editor-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* ── Editor area ── */
+#ea{flex:1;display:flex;flex-direction:column;min-width:0}
 
-  /* Tab bar */
-  #tabbar {
-    height: 35px; background: var(--surface); border-bottom: 1px solid var(--border);
-    display: flex; align-items: flex-end; overflow-x: auto; flex-shrink: 0;
-  }
-  .tab {
-    display: flex; align-items: center; gap: 6px; padding: 0 16px;
-    height: 35px; font-size: 12px; color: var(--muted); cursor: pointer;
-    border-right: 1px solid var(--border); white-space: nowrap;
-    border-top: 2px solid transparent; transition: all .15s;
-  }
-  .tab.active { background: var(--bg); color: var(--text); border-top-color: var(--blue); }
-  .tab .tab-icon { font-size: 10px; }
-  .tab .close { margin-left: 4px; opacity: 0; font-size: 10px; }
-  .tab:hover .close { opacity: .6; }
+/* Tab bar */
+#tabs{
+  height:34px;background:var(--s1);border-bottom:1px solid var(--bd);
+  display:flex;align-items:flex-end;overflow-x:auto;flex-shrink:0;
+}
+.tab{
+  display:flex;align-items:center;gap:5px;padding:0 14px;height:34px;
+  font-size:12px;color:var(--mt);cursor:pointer;white-space:nowrap;
+  border-right:1px solid var(--bd);border-top:2px solid transparent;transition:all .12s;
+}
+.tab.on{background:var(--bg);color:var(--tx);border-top-color:var(--bl)}
+.tab .cx{margin-left:3px;opacity:0;font-size:10px;line-height:1}
+.tab:hover .cx{opacity:.5}
 
-  /* Editor + gutter */
-  #editor-wrap {
-    flex: 1; display: flex; overflow: hidden; background: var(--bg); position: relative;
-  }
-  #gutter {
-    width: 52px; background: var(--bg); padding: 14px 0; text-align: right;
-    font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
-    color: #4a5568; user-select: none; flex-shrink: 0; padding-right: 12px;
-    border-right: 1px solid #1c2128;
-  }
-  #code-editor {
-    flex: 1; padding: 14px 0 14px 16px; font-family: var(--font-mono);
-    font-size: 13px; line-height: 1.7; outline: none; white-space: pre;
-    overflow: auto; tab-size: 4; caret-color: var(--blue);
-    /* Make contenteditable look clean */
-    word-break: normal; overflow-wrap: normal;
-  }
-  /* Syntax highlight spans */
-  .kw  { color: #ff7b72; }  /* keyword */
-  .fn  { color: #d2a8ff; }  /* function */
-  .st  { color: #a5d6ff; }  /* string */
-  .cm  { color: #8b949e; font-style: italic; } /* comment */
-  .nb  { color: #79c0ff; }  /* builtin / number */
-  .cl  { color: #ffa657; }  /* class name */
-  .op  { color: #ff7b72; }  /* operator */
+/* Editor + gutter */
+#ew{flex:1;display:flex;overflow:hidden;background:var(--bg);position:relative}
+#gutter{
+  width:50px;background:var(--bg);padding:13px 0;text-align:right;
+  font-family:var(--mono);font-size:12.5px;line-height:1.72;
+  color:#3a4555;user-select:none;flex-shrink:0;padding-right:10px;
+  border-right:1px solid #1c2128;
+}
+#ce{
+  flex:1;padding:13px 0 13px 14px;font-family:var(--mono);
+  font-size:13px;line-height:1.72;outline:none;white-space:pre;
+  overflow:auto;tab-size:4;caret-color:var(--bl);
+  word-break:normal;overflow-wrap:normal;
+}
+/* Syntax */
+.kw{color:#ff7b72}.fn{color:var(--pu)}.st{color:#a5d6ff}
+.cm{color:#6e7681;font-style:italic}.nb{color:#79c0ff}
+.cl{color:#ffa657}.op{color:#ff7b72}
+/* Security highlight */
+.hl-c{background:rgba(248,81,73,.13);border-bottom:2px solid #f85149;border-radius:1px}
+.hl-h{background:rgba(210,153,34,.11);border-bottom:2px solid var(--yw);border-radius:1px}
+.hl-m{background:rgba(88,166,255,.09);border-bottom:2px solid var(--bl);border-radius:1px}
+/* Gutter severity */
+.gc{color:var(--rd) !important}.gh{color:var(--yw) !important}
 
-  /* Security highlight overlays */
-  .hl-critical { background: rgba(248, 81, 73, .15); border-bottom: 2px solid #f85149; border-radius: 2px; cursor: help; }
-  .hl-high     { background: rgba(210, 153, 34, .12); border-bottom: 2px solid #d29922; border-radius: 2px; cursor: help; }
-  .hl-medium   { background: rgba(88, 166, 255, .10); border-bottom: 2px solid #58a6ff; border-radius: 2px; cursor: help; }
+/* Status bar */
+#sb2{
+  height:22px;background:#1761a0;display:flex;align-items:center;
+  padding:0 10px;font-size:11px;gap:14px;flex-shrink:0;user-select:none;
+}
+.si{display:flex;align-items:center;gap:4px;cursor:default;padding:0 3px;border-radius:3px}
+.si:hover{background:rgba(255,255,255,.1)}
+#si-iss{font-weight:600}
+#si-iss.crit{color:#fecaca}#si-iss.high{color:#fef08a}#si-iss.ok{color:#bbf7d0}
 
-  /* Squiggle on gutter */
-  .gutter-critical { color: var(--red) !important; }
-  .gutter-high     { color: var(--yellow) !important; }
+/* Minimap */
+#mm{width:72px;background:#080c11;border-left:1px solid #1c2128;flex-shrink:0;overflow:hidden;opacity:.5}
+#mm canvas{width:100%;height:100%}
 
-  /* Status bar */
-  #statusbar {
-    height: 22px; background: #1761a0; display: flex; align-items: center;
-    padding: 0 12px; font-size: 11px; gap: 16px; flex-shrink: 0;
-  }
-  #statusbar .item { display: flex; align-items: center; gap: 4px; cursor: default; }
-  #statusbar .item:hover { background: rgba(255,255,255,.1); padding: 0 4px; border-radius: 3px; }
-  #status-issues { font-weight: 600; }
-  #status-issues.has-critical { color: #fecaca; }
-  #status-issues.has-high     { color: #fef08a; }
-  #status-issues.clean        { color: #bbf7d0; }
+/* Scan button */
+#scanbtn{
+  position:absolute;top:9px;right:82px;z-index:10;
+  background:var(--s2);border:1px solid var(--bd);color:var(--tx);
+  padding:5px 13px;border-radius:6px;font-size:11px;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;gap:7px;font-family:var(--ui);
+}
+#scanbtn:hover{background:var(--bl);color:#000;border-color:var(--bl)}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--gr);animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.spin{
+  width:13px;height:13px;border:2px solid var(--bd);border-top-color:var(--bl);
+  border-radius:50%;animation:spin .55s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* ── Right panel (Shadow Audit) ───────────────────────────────── */
-  #right-panel {
-    width: 380px; background: var(--surface); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; flex-shrink: 0;
-  }
-  #right-panel-tabs {
-    display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
-  }
-  .rp-tab {
-    flex: 1; padding: 8px 0; text-align: center; font-size: 11px; color: var(--muted);
-    cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s;
-    letter-spacing: .3px;
-  }
-  .rp-tab.active { color: var(--text); border-bottom-color: var(--blue); }
-  #right-panel-body { flex: 1; overflow-y: auto; padding: 0; }
+/* ── Right panel ── */
+#rp{width:375px;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0}
+#rptabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0}
+.rpt{
+  flex:1;padding:8px 0;text-align:center;font-size:11px;color:var(--mt);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.rpt.on{color:var(--tx);border-bottom-color:var(--bl)}
+#rpbody{flex:1;overflow-y:auto}
 
-  /* Finding cards */
-  .finding-card {
-    border-left: 3px solid var(--border); margin: 8px 10px; padding: 10px 12px;
-    background: var(--bg); border-radius: 0 6px 6px 0; transition: all .2s;
-    animation: slideIn .25s ease-out;
-  }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-  .finding-card.critical { border-left-color: var(--red); }
-  .finding-card.high     { border-left-color: var(--yellow); }
-  .finding-card.medium   { border-left-color: var(--blue); }
-  .finding-card.low      { border-left-color: var(--muted); }
-  .finding-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .sev-badge {
-    font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
-    letter-spacing: .8px; text-transform: uppercase;
-  }
-  .sev-badge.critical { background: #3d1c1c; color: var(--red); }
-  .sev-badge.high     { background: #3d2c00; color: var(--orange); }
-  .sev-badge.medium   { background: #0d2149; color: var(--blue); }
-  .sev-badge.low      { background: var(--surface2); color: var(--muted); }
-  .finding-rule { font-size: 10px; color: var(--purple); font-family: var(--font-mono); }
-  .finding-line { font-size: 10px; color: var(--muted); margin-left: auto; }
-  .finding-desc { font-size: 12px; color: var(--text); line-height: 1.5; margin-bottom: 4px; }
-  .finding-rem  { font-size: 11px; color: var(--green); line-height: 1.4; }
-  .finding-snippet {
-    font-family: var(--font-mono); font-size: 11px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px;
-    margin: 6px 0; color: var(--orange); overflow-x: auto; white-space: pre;
-  }
+/* Finding cards */
+.fc{
+  border-left:3px solid var(--bd);margin:7px 9px;padding:10px 11px;
+  background:var(--bg);border-radius:0 6px 6px 0;animation:sli .22s ease-out;
+}
+@keyframes sli{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.fc.critical{border-left-color:var(--rd)}.fc.high{border-left-color:var(--yw)}
+.fc.medium{border-left-color:var(--bl)}.fc.low{border-left-color:var(--mt)}
+.fh{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.sb3{
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;
+  letter-spacing:.8px;text-transform:uppercase;
+}
+.sb3.critical{background:#2d1212;color:var(--rd)}
+.sb3.high{background:#2d1f00;color:var(--or)}
+.sb3.medium{background:#0d1e40;color:var(--bl)}
+.sb3.low{background:var(--s2);color:var(--mt)}
+.fr{font-size:10px;color:var(--pu);font-family:var(--mono)}
+.fl{font-size:10px;color:var(--mt);margin-left:auto}
+.fd{font-size:12px;color:var(--tx);line-height:1.5;margin-bottom:4px}
+.frm{font-size:11px;color:var(--gr);line-height:1.4}
+.fsnip{
+  font-family:var(--mono);font-size:11px;background:var(--s2);
+  border:1px solid var(--bd);border-radius:4px;padding:5px 8px;
+  margin:5px 0;color:var(--or);overflow-x:auto;white-space:pre;
+}
 
-  /* Empty state */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; color: var(--muted); gap: 12px; padding: 40px;
-    text-align: center;
-  }
-  .empty-state .icon { font-size: 48px; opacity: .3; }
-  .empty-state .msg  { font-size: 13px; line-height: 1.6; }
+/* Scan summary */
+.scan-sum{
+  padding:9px 10px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:11px;color:var(--mt);
+}
 
-  /* Audit panel */
-  #audit-form { padding: 12px; border-bottom: 1px solid var(--border); }
-  #audit-prompt {
-    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); padding: 8px 10px; font-size: 12px; font-family: var(--font-ui);
-    resize: none; outline: none; line-height: 1.5;
-  }
-  #audit-prompt:focus { border-color: var(--blue); }
-  .audit-btn {
-    width: 100%; margin-top: 8px; padding: 7px; background: var(--blue);
-    border: none; border-radius: 6px; color: #000; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: opacity .15s; letter-spacing: .3px;
-  }
-  .audit-btn:hover { opacity: .85; }
-  .audit-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* Empty state */
+.es{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:200px;color:var(--mt);gap:10px;padding:24px;text-align:center;
+}
+.es svg{opacity:.25}
+.es p{font-size:12.5px;line-height:1.6}
 
-  /* Audit result */
-  .audit-result {
-    margin: 8px 10px; border-radius: 8px; padding: 12px;
-    background: var(--bg); border: 1px solid var(--border);
-    animation: slideIn .3s ease-out;
-  }
-  .audit-status {
-    font-size: 13px; font-weight: 700; letter-spacing: .5px;
-    padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px;
-  }
-  .audit-status.passed   { background: #1a4731; color: var(--green); }
-  .audit-status.needs_revision { background: #3d2c00; color: var(--orange); }
-  .audit-status.failed   { background: #3d1c1c; color: var(--red); }
-  .audit-msg { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+/* Audit panel */
+#af{padding:11px;border-bottom:1px solid var(--bd)}
+#ap{
+  width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:6px;
+  color:var(--tx);padding:8px 10px;font-size:12px;font-family:var(--ui);
+  resize:none;outline:none;line-height:1.5;
+}
+#ap:focus{border-color:var(--bl)}
+.aub{
+  width:100%;margin-top:7px;padding:7px;background:var(--bl);
+  border:none;border-radius:6px;color:#000;font-size:12px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.aub:hover{opacity:.85}.aub:disabled{opacity:.4;cursor:not-allowed}
+.ar{
+  margin:7px 9px;border-radius:7px;padding:11px;
+  background:var(--bg);border:1px solid var(--bd);animation:sli .28s ease-out;
+}
+.ast{
+  font-size:12.5px;font-weight:700;letter-spacing:.4px;
+  padding:3px 11px;border-radius:18px;display:inline-block;margin-bottom:7px;
+}
+.ast.passed{background:#0f2118;color:var(--gr)}
+.ast.needs_revision{background:#2d1f00;color:var(--or)}
+.ast.failed{background:#2d1212;color:var(--rd)}
+.am{font-size:12px;color:var(--mt);margin-bottom:7px;line-height:1.5}
 
-  /* Scan button */
-  #scan-btn {
-    position: absolute; top: 10px; right: 10px;
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); padding: 5px 14px; border-radius: 6px;
-    font-size: 11px; cursor: pointer; transition: all .15s; z-index: 10;
-    display: flex; align-items: center; gap: 6px; font-family: var(--font-ui);
-  }
-  #scan-btn:hover { background: var(--blue); color: #000; border-color: var(--blue); }
-  #scan-btn .pulse {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
-    animation: pulse 1.5s infinite;
-  }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+/* History */
+.hc{
+  margin:7px 9px;border-left:3px solid var(--bd);padding:9px 10px;
+  background:var(--bg);border-radius:0 6px 6px 0;cursor:pointer;
+}
+.hc:hover{border-left-color:var(--bl)}
+.hc.failed{border-left-color:var(--rd)}.hc.needs_revision{border-left-color:var(--yw)}
+.hc.passed{border-left-color:var(--gr)}
 
-  /* Demo bar */
-  #demo-bar {
-    background: #010409; border-top: 1px solid var(--border);
-    padding: 6px 16px; display: flex; align-items: center; gap: 12px;
-    font-size: 11px; color: var(--muted); flex-shrink: 0;
-  }
-  #demo-bar strong { color: var(--blue); }
-  .demo-btn {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    padding: 4px 12px; border-radius: 5px; font-size: 11px; cursor: pointer;
-    transition: all .15s;
-  }
-  .demo-btn:hover { background: var(--blue); color: #000; border-color: var(--blue); }
-  .demo-btn.stop { border-color: var(--red); color: var(--red); }
-  .demo-btn.stop:hover { background: var(--red); color: #fff; }
-  #demo-label { flex: 1; font-style: italic; }
-  #demo-progress { width: 120px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  #demo-progress-inner { height: 100%; background: var(--blue); border-radius: 2px; width: 0%; transition: width .1s; }
+/* Tooltip */
+#tip{
+  position:fixed;background:#1c2128;border:1px solid var(--bd);
+  color:var(--tx);font-size:11px;padding:6px 10px;border-radius:6px;
+  max-width:260px;pointer-events:none;z-index:9999;line-height:1.5;
+  box-shadow:0 4px 14px rgba(0,0,0,.5);display:none;
+}
 
-  /* Tooltip */
-  .tooltip {
-    position: fixed; background: #1c2128; border: 1px solid var(--border);
-    color: var(--text); font-size: 11px; padding: 6px 10px; border-radius: 6px;
-    max-width: 280px; pointer-events: none; z-index: 9999; line-height: 1.5;
-    box-shadow: 0 4px 16px rgba(0,0,0,.4);
-  }
+/* Scrollbars */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
 
-  /* Scrollbars */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* Toast */
+#toast{
+  position:fixed;bottom:50px;left:50%;transform:translateX(-50%);
+  background:var(--s2);border:1px solid var(--bd);color:var(--tx);
+  padding:7px 18px;border-radius:7px;font-size:12px;z-index:9998;
+  opacity:0;transition:opacity .28s;pointer-events:none;white-space:nowrap;
+}
+#toast.show{opacity:1}
 
-  /* Minimap placeholder */
-  #minimap {
-    width: 80px; background: #0a0f16; border-left: 1px solid #1c2128;
-    flex-shrink: 0; overflow: hidden; opacity: .5;
-  }
-  #minimap canvas { width: 100%; height: 100%; }
-
-  /* Loading spinner */
-  .spinner {
-    width: 14px; height: 14px; border: 2px solid var(--border);
-    border-top-color: var(--blue); border-radius: 50%;
-    animation: spin .6s linear infinite; display: inline-block;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Notification toast */
-  #toast {
-    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    padding: 8px 20px; border-radius: 8px; font-size: 12px; z-index: 9998;
-    opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap;
-  }
-  #toast.show { opacity: 1; }
+/* ── Notes panel (presenter notes, bottom strip) ── */
+#notes{
+  height:36px;background:#080c11;border-top:1px solid #1c2128;
+  display:flex;align-items:center;padding:0 12px;gap:10px;
+  font-size:11px;color:#4a5568;flex-shrink:0;user-select:none;
+}
+#notes-counter{font-family:var(--mono);color:#3a4555;white-space:nowrap;flex-shrink:0}
+#notes-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4e5a6b;font-style:italic}
+.nb-btn{
+  background:transparent;border:1px solid #1c2128;color:#3a4555;
+  padding:2px 9px;border-radius:4px;font-size:10px;cursor:pointer;
+  transition:all .15s;font-family:var(--mono);flex-shrink:0;
+}
+.nb-btn:hover{border-color:var(--bd);color:var(--mt)}
+#notes-demo{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  border-left:1px solid #1c2128;padding-left:10px;margin-left:2px;
+}
+.dmo-btn{
+  background:transparent;border:1px solid #1c2128;color:#3a4555;
+  padding:2px 10px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;
+}
+.dmo-btn:hover{border-color:#30363d;color:var(--mt)}
+.dmo-btn.active{border-color:var(--bl);color:var(--bl)}
+#dp{width:90px;height:2px;background:#1c2128;border-radius:2px;overflow:hidden;flex-shrink:0}
+#dpi{height:100%;background:var(--bl);border-radius:2px;width:0%;transition:width .08s}
+#stop-btn{border-color:#3d1c1c;color:var(--rd);display:none}
+#stop-btn:hover{background:var(--rd);color:#fff;border-color:var(--rd)}
 </style>
 </head>
 <body>
 
+<!-- SVG icon defs (reusable) -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ic-folder" viewBox="0 0 16 16"><path d="M1.75 2.5A.75.75 0 0 1 2.5 2h3.44l.97 1.06H13.5a.75.75 0 0 1 .75.75v8.44a.75.75 0 0 1-.75.75H2.5a.75.75 0 0 1-.75-.75V2.5z" fill-opacity=".4"/><path d="M1.75 4.5H14.25v7a.75.75 0 0 1-.75.75H2.5a.75.75 0 0 1-.75-.75V4.5z"/></symbol>
+  <symbol id="ic-file-py" viewBox="0 0 16 16"><path d="M3.5 1.75A.75.75 0 0 1 4.25 1h5l3.75 3.75V13.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75V1.75z" fill-opacity=".35"/><path d="M9.25 1v3.25H13L9.25 1z" fill-opacity=".6"/><text x="4" y="11.5" font-family="monospace" font-size="5.5" fill="#79c0ff" font-weight="bold">py</text></symbol>
+  <symbol id="ic-file-cfg" viewBox="0 0 16 16"><path d="M3.5 1.75A.75.75 0 0 1 4.25 1h5l3.75 3.75V13.5a.75.75 0 0 1-.75.75H4.25a.75.75 0 0 1-.75-.75V1.75z" fill-opacity=".35"/><path d="M9.25 1v3.25H13L9.25 1z" fill-opacity=".6"/><text x="3.5" y="11.5" font-family="monospace" font-size="5" fill="#d29922" font-weight="bold">cfg</text></symbol>
+  <symbol id="ic-shield" viewBox="0 0 16 16"><path d="M7.467.133a1.75 1.75 0 0 1 1.066 0l5.25 1.68A1.75 1.75 0 0 1 15 3.48V7c0 1.566-.32 3.182-1.303 4.682-.983 1.498-2.585 2.813-5.032 3.855a1.697 1.697 0 0 1-1.33 0c-2.447-1.042-4.049-2.357-5.032-3.855C1.32 10.182 1 8.566 1 7V3.48a1.75 1.75 0 0 1 1.217-1.667L7.467.133z"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 1-8.998 0A4.499 4.499 0 0 1 11.5 7Z"/></symbol>
+  <symbol id="ic-history" viewBox="0 0 16 16"><path d="M1.643 3.143L.427 1.927A.25.25 0 0 0 0 2.104V5.75c0 .138.112.25.25.25h3.646a.25.25 0 0 0 .177-.427L2.715 4.215a6.5 6.5 0 1 1-1.18 4.458.75.75 0 1 0-1.493.154 8.001 8.001 0 1 0 1.6-5.684ZM7.75 4a.75.75 0 0 1 .75.75v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.75.75 0 0 1 7 8.25v-3.5A.75.75 0 0 1 7.75 4Z"/></symbol>
+  <symbol id="ic-gear" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0a8.506 8.506 0 0 1 .986.058l.355 1.966a.75.75 0 0 0 .53.581 6.5 6.5 0 0 1 1.198.496.75.75 0 0 0 .782-.03l1.668-1.079a8.567 8.567 0 0 1 1.397 1.396l-1.079 1.668a.75.75 0 0 0-.03.783 6.5 6.5 0 0 1 .496 1.198.75.75 0 0 0 .581.529l1.966.355A8.506 8.506 0 0 1 16 8a8.506 8.506 0 0 1-.058.986l-1.966.355a.75.75 0 0 0-.581.53 6.5 6.5 0 0 1-.496 1.198.75.75 0 0 0 .03.782l1.079 1.668a8.567 8.567 0 0 1-1.396 1.397l-1.668-1.079a.75.75 0 0 0-.783-.03 6.5 6.5 0 0 1-1.198.496.75.75 0 0 0-.529.581l-.355 1.966A8.506 8.506 0 0 1 8 16a8.506 8.506 0 0 1-.986-.058l-.355-1.966a.75.75 0 0 0-.53-.581 6.5 6.5 0 0 1-1.198-.496.75.75 0 0 0-.782.03l-1.668 1.079a8.567 8.567 0 0 1-1.397-1.396l1.079-1.668a.75.75 0 0 0 .03-.783 6.5 6.5 0 0 1-.496-1.198.75.75 0 0 0-.581-.529L.058 8.986A8.506 8.506 0 0 1 0 8a8.506 8.506 0 0 1 .058-.986l1.966-.355a.75.75 0 0 0 .581-.53 6.5 6.5 0 0 1 .496-1.198.75.75 0 0 0-.03-.782L1.992 2.48a8.567 8.567 0 0 1 1.396-1.397l1.668 1.079a.75.75 0 0 0 .783.03 6.5 6.5 0 0 1 1.198-.496.75.75 0 0 0 .529-.581L7.921.058A8.506 8.506 0 0 1 8 0ZM6.5 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/></symbol>
+  <symbol id="ic-warn" viewBox="0 0 16 16"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></symbol>
+  <symbol id="ic-branch" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.75 2.5a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm.75 2.25a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5ZM4.25 13.5a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM5 15.75a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5ZM4.25 2.5a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM5 4.75a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5ZM5 7v2c0 .55.45 1 1 1h4a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1Zm1 1h4v1H6V8Z"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 16 16"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></symbol>
+  <symbol id="ic-audit" viewBox="0 0 16 16"><path d="M1.5 2.75C1.5 1.784 2.284 1 3.25 1h9.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 12.75 12H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 13.543V12H3.25A1.75 1.75 0 0 1 1.5 10.25v-7.5Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25H4v2.543L7.293 9.5H12.75a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25H3.25Z"/></symbol>
+</svg>
+
 <!-- Title bar -->
 <div id="titlebar">
-  <div class="dots">
-    <div class="dot red"></div>
-    <div class="dot yellow"></div>
-    <div class="dot green"></div>
+  <div class="wdots">
+    <div class="wdot r"></div><div class="wdot y"></div><div class="wdot g"></div>
   </div>
-  <div class="title">shadow-developer -- payments/webhook.py</div>
-  <div class="badge-ext">⚡ SHADOW DEVELOPER</div>
+  <span id="tb-title">ecommerce-platform-v2 &mdash; payments/webhook.py</span>
+  <span id="tb-badge">SHADOW DEVELOPER</span>
 </div>
 
 <div id="layout">
+
   <!-- Activity bar -->
-  <div id="activitybar">
-    <button class="act-btn active" title="Explorer" onclick="setActivity(this)">📁</button>
-    <button class="act-btn" title="Search" onclick="setActivity(this)">🔍</button>
-    <button class="act-btn" title="Security Scan" onclick="setActivity(this); showTab('scan')">🛡</button>
-    <button class="act-btn" title="Spec Audit" onclick="setActivity(this); showTab('audit')">🕵️</button>
+  <div id="act">
+    <button class="abt on" title="Explorer" onclick="setAct(this)">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-folder"/></svg>
+    </button>
+    <button class="abt" title="Search" onclick="setAct(this)">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-search"/></svg>
+    </button>
+    <button class="abt" title="Security" onclick="setAct(this);showTab('scan')">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-shield"/></svg>
+    </button>
+    <button class="abt" title="Spec Audit" onclick="setAct(this);showTab('audit')">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-audit"/></svg>
+    </button>
     <div style="flex:1"></div>
-    <button class="act-btn" title="Settings">⚙️</button>
+    <button class="abt" title="Settings">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-gear"/></svg>
+    </button>
   </div>
 
   <!-- Sidebar -->
-  <div id="sidebar">
-    <div class="sidebar-title">Explorer</div>
-    <div class="file-tree">
-      <div class="folder-item">▾ 📂 ecommerce-platform-v2</div>
-      <div class="folder-item" style="padding-left:28px">▾ 📂 payments</div>
-      <div class="file-item active" style="padding-left:44px" onclick="loadFile('webhook')">
-        <span class="icon">🐍</span> webhook.py <span class="badge-warn" id="badge-webhook">⚠ 4</span>
+  <div id="sb">
+    <div class="sb-title">Explorer</div>
+    <div class="ftree">
+      <div class="fdr">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-folder"/></svg>
+        ecommerce-platform-v2
       </div>
-      <div class="file-item" style="padding-left:44px" onclick="loadFile('charge')">
-        <span class="icon">🐍</span> charge.py <span class="badge-ok">✓</span>
+      <div class="fdr" style="padding-left:24px">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-folder"/></svg>
+        payments
       </div>
-      <div class="folder-item" style="padding-left:28px">▾ 📂 users</div>
-      <div class="file-item" style="padding-left:44px" onclick="loadFile('auth')">
-        <span class="icon">🐍</span> auth.py <span class="badge-warn">⚠ 2</span>
+      <div class="fi on" style="padding-left:38px" onclick="loadFile('webhook')" id="fi-webhook">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span class="fi-name">webhook.py</span>
+        <span class="bw warn" id="bdg-webhook">4</span>
       </div>
-      <div class="file-item" style="padding-left:44px" onclick="loadFile('models')">
-        <span class="icon">🐍</span> models.py <span class="badge-ok">✓</span>
+      <div class="fi" style="padding-left:38px" onclick="loadFile('charge')" id="fi-charge">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span class="fi-name">charge.py</span>
+        <span class="bw ok" id="bdg-charge">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-check"/></svg>
+        </span>
       </div>
-      <div class="folder-item" style="padding-left:28px">▾ 📂 config</div>
-      <div class="file-item" style="padding-left:44px" onclick="loadFile('settings')">
-        <span class="icon">🔧</span> settings.py <span class="badge-warn">⚠ 3</span>
+      <div class="fdr" style="padding-left:24px">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-folder"/></svg>
+        users
       </div>
-      <div class="file-item" style="padding-left:44px" onclick="loadFile('safe')">
-        <span class="icon">🐍</span> safe_example.py <span class="badge-ok">✓</span>
+      <div class="fi" style="padding-left:38px" onclick="loadFile('auth')" id="fi-auth">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span class="fi-name">auth.py</span>
+        <span class="bw warn" id="bdg-auth">2</span>
+      </div>
+      <div class="fi" style="padding-left:38px" onclick="loadFile('models')" id="fi-models">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span class="fi-name">models.py</span>
+        <span class="bw ok" id="bdg-models">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-check"/></svg>
+        </span>
+      </div>
+      <div class="fdr" style="padding-left:24px">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-folder"/></svg>
+        config
+      </div>
+      <div class="fi" style="padding-left:38px" onclick="loadFile('settings')" id="fi-settings">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-cfg"/></svg>
+        <span class="fi-name">settings.py</span>
+        <span class="bw warn" id="bdg-settings">3</span>
+      </div>
+      <div class="fi" style="padding-left:38px" onclick="loadFile('safe')" id="fi-safe">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span class="fi-name">safe_example.py</span>
+        <span class="bw ok" id="bdg-safe">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-check"/></svg>
+        </span>
       </div>
     </div>
   </div>
 
   <!-- Editor area -->
-  <div id="editor-area">
-    <!-- Tab bar -->
-    <div id="tabbar">
-      <div class="tab active" id="tab-webhook">
-        <span class="tab-icon">🐍</span> webhook.py <span class="close">✕</span>
+  <div id="ea">
+    <div id="tabs">
+      <div class="tab on" id="active-tab">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-file-py"/></svg>
+        <span id="tab-name">webhook.py</span>
+        <span class="cx"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-close"/></svg></span>
       </div>
     </div>
 
-    <!-- Editor wrap -->
-    <div id="editor-wrap">
-      <button id="scan-btn" onclick="runScan()">
+    <div id="ew">
+      <button id="scanbtn" onclick="runScan()">
         <div class="pulse"></div> Scan
       </button>
       <div id="gutter"></div>
-      <div id="code-editor" contenteditable="true" spellcheck="false"
-           oninput="onEditorInput()" onkeydown="handleTab(event)"></div>
-      <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+      <div id="ce" contenteditable="true" spellcheck="false"
+           oninput="onInput()" onkeydown="onKey(event)"></div>
+      <div id="mm"><canvas id="mc"></canvas></div>
     </div>
 
-    <!-- Status bar -->
-    <div id="statusbar">
-      <div class="item">🌿 main</div>
-      <div class="item" id="status-issues">⚡ Loading...</div>
-      <div class="item">🐍 Python 3.11</div>
+    <div id="sb2">
+      <span class="si">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-branch"/></svg>
+        main
+      </span>
+      <span class="si" id="si-iss">Loading...</span>
+      <span class="si">Python 3.11</span>
       <div style="flex:1"></div>
-      <div class="item">Ln <span id="status-ln">1</span>, Col <span id="status-col">1</span></div>
-      <div class="item">UTF-8</div>
-      <div class="item" style="color:var(--green)">⚡ Shadow Developer v0.1</div>
-    </div>
-
-    <!-- Demo bar -->
-    <div id="demo-bar">
-      <strong>DEMO MODE</strong>
-      <span id="demo-label">Click a scenario to auto-type code and watch Shadow Developer catch it live</span>
-      <div id="demo-progress"><div id="demo-progress-inner"></div></div>
-      <button class="demo-btn" onclick="runDemo(0)">💉 SQL Injection</button>
-      <button class="demo-btn" onclick="runDemo(1)">🔓 Auth Bypass</button>
-      <button class="demo-btn" onclick="runDemo(2)">🔑 Hardcoded Keys</button>
-      <button class="demo-btn" onclick="runDemo(3)">✅ Safe Code</button>
-      <button class="demo-btn stop" id="stop-btn" onclick="stopDemo()" style="display:none">⏹ Stop</button>
+      <span class="si">Ln <span id="si-ln">1</span>, Col <span id="si-col">1</span></span>
+      <span class="si">UTF-8</span>
+      <span class="si" style="color:var(--bl);font-family:var(--mono);font-size:10px">Shadow Developer v0.1</span>
     </div>
   </div>
 
   <!-- Right panel -->
-  <div id="right-panel">
-    <div id="right-panel-tabs">
-      <div class="rp-tab active" id="rptab-scan" onclick="showTab('scan')">🔍 Security</div>
-      <div class="rp-tab" id="rptab-audit" onclick="showTab('audit')">🕵️ Spec Audit</div>
-      <div class="rp-tab" id="rptab-history" onclick="showTab('history'); loadHistory()">📋 History</div>
+  <div id="rp">
+    <div id="rptabs">
+      <div class="rpt on" id="rptab-scan" onclick="showTab('scan')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-shield"/></svg>
+        Security
+      </div>
+      <div class="rpt" id="rptab-audit" onclick="showTab('audit')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-audit"/></svg>
+        Spec Audit
+      </div>
+      <div class="rpt" id="rptab-history" onclick="showTab('history');loadHistory()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-history"/></svg>
+        History
+      </div>
     </div>
-    <div id="right-panel-body">
-      <!-- scan tab -->
+    <div id="rpbody">
       <div id="tab-scan">
-        <div class="empty-state" id="scan-empty">
-          <div class="icon">🛡️</div>
-          <div class="msg">No scan results yet.<br>Type code or click <strong>Scan</strong> to analyze for security issues.</div>
+        <div class="es" id="scan-empty">
+          <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-shield"/></svg>
+          <p>No scan results yet.<br>Type code or press <strong>Scan</strong> to analyze.</p>
         </div>
         <div id="scan-results" style="display:none"></div>
       </div>
-      <!-- audit tab -->
       <div id="tab-audit" style="display:none">
-        <div id="audit-form">
-          <textarea id="audit-prompt" rows="4"
-            placeholder="Describe a feature you want to build…&#10;e.g. Add a payment webhook route that processes Stripe events"></textarea>
-          <button class="audit-btn" id="audit-run-btn" onclick="runAudit()">⚡ Run Shadow Audit</button>
+        <div id="af">
+          <textarea id="ap" rows="4" placeholder="Describe a feature to build&#10;e.g. Add a Stripe webhook route that updates subscription status"></textarea>
+          <button class="aub" id="aub" onclick="runAudit()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-shield"/></svg>
+            Run Shadow Audit
+          </button>
         </div>
         <div id="audit-results"></div>
       </div>
-      <!-- history tab -->
       <div id="tab-history" style="display:none">
-        <div id="history-results" style="padding:8px">
-          <div class="empty-state"><div class="icon">📋</div><div class="msg">Loading history…</div></div>
+        <div id="history-results">
+          <div class="es">
+            <svg width="36" height="36" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-history"/></svg>
+            <p>Loading history...</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Tooltip -->
-<div class="tooltip" id="tooltip" style="display:none"></div>
+<!-- Notes / presenter panel -->
+<div id="notes">
+  <span id="notes-counter">Step 1 / 10</span>
+  <span id="notes-text">Shadow Developer intercepts your feature prompt before any code is written</span>
+  <button class="nb-btn" onclick="noteNav(-1)">Prev</button>
+  <button class="nb-btn" onclick="noteNav(1)">Next</button>
+  <div id="notes-demo">
+    <button class="dmo-btn" onclick="runDemo(0)" id="db0">SQL Injection</button>
+    <button class="dmo-btn" onclick="runDemo(1)" id="db1">Auth Bypass</button>
+    <button class="dmo-btn" onclick="runDemo(2)" id="db2">Hardcoded Keys</button>
+    <button class="dmo-btn" onclick="runDemo(3)" id="db3">Safe Code</button>
+    <div id="dp"><div id="dpi"></div></div>
+    <button class="dmo-btn" id="stop-btn" onclick="stopDemo()">Stop</button>
+  </div>
+</div>
+
+<div id="tip"></div>
 <div id="toast"></div>
 
 <script>
-// ─── File library ────────────────────────────────────────────────────
+// ── File library ───────────────────────────────────────────────────
 const FILES = {
-  webhook: `# payments/webhook.py
+webhook:
+`# payments/webhook.py
 # Handles incoming Stripe webhook events
 import hashlib
 import json
 from flask import request, jsonify
 
-# ⚠ Hardcoded secret -- never do this
+# Hardcoded secret -- should be in environment variable
 STRIPE_SECRET = "sk_live_4xMNbqK9f2Rz7pL1eVcT8wXs"
 WEBHOOK_SECRET = "whsec_abc123supersecret"
 
@@ -465,24 +515,23 @@ def process_webhook():
     payload = request.get_data()
     sig = request.headers.get("Stripe-Signature")
 
-    # ⚠ No signature verification
+    # No HMAC signature verification here
     data = json.loads(payload)
 
     if data["type"] == "payment_intent.succeeded":
         user_id = data["data"]["object"]["metadata"]["user_id"]
 
-        # ⚠ SQL Injection -- raw f-string query
+        # SQL Injection -- raw f-string query
         cursor.execute(f"UPDATE subscriptions SET status='active' WHERE user_id={user_id}")
 
-    # ⚠ Weak hash for idempotency key
+    # Weak hash for idempotency key
     key = hashlib.md5(payload).hexdigest()
     return jsonify({"status": "ok", "key": key})
 `,
-  charge: `# payments/charge.py
+charge:
+`# payments/charge.py
 # Card charge endpoint -- production ready
 import os
-import hmac
-import hashlib
 import secrets
 import stripe
 from sqlalchemy.orm import Session
@@ -490,33 +539,28 @@ from sqlalchemy.orm import Session
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 def charge_card(db: Session, amount: int, token: str, user_id: int):
-    """Process a card charge with full idempotency support."""
     idempotency_key = secrets.token_hex(32)
-
     charge = stripe.PaymentIntent.create(
-        amount=amount,
-        currency="usd",
+        amount=amount, currency="usd",
         payment_method=token,
         idempotency_key=idempotency_key,
         confirm=True,
     )
-
-    # Parameterized query -- safe
+    # Parameterized ORM query -- injection safe
     user = db.query(User).filter(User.id == user_id).first()
     user.subscription_status = "active"
     db.commit()
-
     return {"charge_id": charge.id, "status": charge.status}
 `,
-  auth: `# users/auth.py
-# Authentication utilities
+auth:
+`# users/auth.py
 import random
 from jose import jwt
 
-SECRET_KEY = "abc"           # ⚠ Weak secret key
+SECRET_KEY = "abc"  # Weak secret key
 
 def create_token(user_id: int) -> str:
-    # ⚠ Non-cryptographic random for session ID
+    # Non-cryptographic random for session ID
     session_id = random.randint(1000, 9999)
     return jwt.encode(
         {"sub": str(user_id), "sid": session_id},
@@ -525,14 +569,14 @@ def create_token(user_id: int) -> str:
     )
 
 def verify_token(token: str):
-    # ⚠ Disabled SSL verification
+    # SSL verification disabled
     return jwt.decode(
         token, SECRET_KEY,
         options={"verify_signature": False}
     )
 `,
-  models: `# users/models.py
-# SQLAlchemy ORM models
+models:
+`# users/models.py
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -553,23 +597,23 @@ class Subscription(Base):
     user_id    = Column(Integer, nullable=False)
     plan       = Column(String(50))
     status     = Column(String(20), default="inactive")
-    expires_at = Column(DateTime)
 `,
-  settings: `# config/settings.py
+settings:
+`# config/settings.py
 import os
 
-DEBUG = True              # ⚠ Debug mode on
-SECRET_KEY = "dev-key"   # ⚠ Weak secret key
-DATABASE_URL = "postgresql://admin:password123@localhost/prod"  # ⚠ Hardcoded creds
+DEBUG = True
+SECRET_KEY = "dev-key"
+DATABASE_URL = "postgresql://admin:password123@localhost/prod"
 
 ALLOWED_HOSTS = ["*"]
-CORS_ORIGINS  = ["*"]    # ⚠ CORS wildcard
+CORS_ORIGINS  = ["*"]
 
-AWS_ACCESS_KEY_ID     = "AKIAIOSFODNN7EXAMPLE"   # ⚠ AWS key
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG" # ⚠ AWS secret
+AWS_ACCESS_KEY_ID     = "AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG"
 `,
-  safe: `# safe_example.py
-# Best practice reference -- zero security findings
+safe:
+`# safe_example.py
 import os
 import secrets
 import hashlib
@@ -581,51 +625,40 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY   = os.getenv("SECRET_KEY")
 
 def safe_query(db: Session, user_id: int):
-    """Parameterized query -- SQL injection safe."""
     return db.query(User).filter(User.id == user_id).first()
 
 def safe_hash(data: bytes) -> str:
-    """SHA-256 -- cryptographically strong."""
     return hashlib.sha256(data).hexdigest()
 
 def safe_token() -> str:
-    """Cryptographically random token."""
     return secrets.token_hex(32)
 
 def safe_subprocess(filename: str) -> str:
-    """No shell=True, args as list."""
     result = subprocess.run(["cat", filename], capture_output=True, text=True)
     return result.stdout
 `,
 };
 
-// ─── Demo scenarios ─────────────────────────────────────────────────
+// ── Demo scenarios ─────────────────────────────────────────────────
 const DEMOS = [
-  {
-    label: "💉 SQL Injection Demo",
-    code:
-`# payments/search.py -- VULNERABLE CODE
+{
+  label:"SQL Injection",
+  code:
+`# payments/search.py
 import sqlite3
 
 def search_orders(db, customer_name):
-    # Developer skips the ORM for "speed"
     cursor = db.cursor()
-
-    # ⚠ Classic SQL injection -- user input goes straight in
     cursor.execute(f"SELECT * FROM orders WHERE name='{customer_name}'")
-
-    # Attacker input: ' OR '1'='1
-    # Becomes: SELECT * FROM orders WHERE name='' OR '1'='1'
     return cursor.fetchall()
 
 password = "hardcoded_db_pass_123"
 `,
-    prompt: "Add a search endpoint that queries orders by customer name using cursor.execute",
-  },
-  {
-    label: "🔓 Auth Bypass Demo",
-    code:
-`# admin/dashboard.py -- DANGEROUS
+  prompt:"Add a search endpoint that queries orders by customer name using cursor.execute",
+},{
+  label:"Auth Bypass",
+  code:
+`# admin/dashboard.py
 import os
 
 DEBUG = True
@@ -633,61 +666,45 @@ SECRET_KEY = "abc"
 
 def get_all_users(request):
     # TODO: skip auth check for now, fix later
-    # This route is only for internal use
-
-    # ⚠ No authentication whatsoever
     users = db.query("SELECT * FROM users").fetchall()
     return {"users": users}
 
 def admin_delete_user(user_id):
-    # ⚠ Shell injection via os.system
     os.system("rm -rf /data/users/" + user_id)
 `,
-    prompt: "Create a public admin dashboard endpoint that bypasses auth and returns all user data for internal debugging",
-  },
-  {
-    label: "🔑 Hardcoded Keys Demo",
-    code:
-`# integrations/config.py -- CREDENTIAL LEAK
+  prompt:"Create a public admin dashboard endpoint that bypasses auth and returns all user data",
+},{
+  label:"Hardcoded Keys",
+  code:
+`# integrations/config.py
 import hashlib
 import requests
 
-# ⚠ All of these should be environment variables
-STRIPE_API_KEY      = "sk_live_4xMNbqK9abcdef123456"
-SENDGRID_API_KEY    = "SG.abcdefghijklmnopqrstuvwxyz"
-AWS_ACCESS_KEY      = "AKIAIOSFODNN7EXAMPLE"
-AWS_SECRET          = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-DATABASE_PASSWORD   = "prod_password_2024!"
+STRIPE_API_KEY    = "sk_live_4xMNbqK9abcdef123456"
+AWS_ACCESS_KEY    = "AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET        = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+DATABASE_PASSWORD = "prod_password_2024!"
 
 def notify_user(user_email: str, message: str):
-    # ⚠ verify=False disables SSL cert check
     response = requests.post(
         "https://api.sendgrid.com/v3/mail/send",
-        headers={"Authorization": f"Bearer {SENDGRID_API_KEY}"},
+        headers={"Authorization": f"Bearer {STRIPE_API_KEY}"},
         json={"to": user_email, "content": message},
         verify=False
     )
-    # ⚠ MD5 for "security" token
     token = hashlib.md5(user_email.encode()).hexdigest()
     return token
 `,
-    prompt: "Add SendGrid email notifications with the API key configured in code",
-  },
-  {
-    label: "✅ Safe Code Demo",
-    code:
-`# payments/webhook_secure.py -- PRODUCTION READY
-import os
-import hmac
-import hashlib
-import secrets
-import json
-from typing import Optional
+  prompt:"Add SendGrid email notifications with API key configured in code",
+},{
+  label:"Safe Code",
+  code:
+`# payments/webhook_secure.py
+import os, hmac, hashlib, secrets, json
 
 WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 def verify_stripe_signature(payload: bytes, sig_header: str) -> bool:
-    """HMAC-SHA256 signature verification -- required for all webhooks."""
     timestamp, signature = parse_sig_header(sig_header)
     expected = hmac.new(
         WEBHOOK_SECRET.encode(), payload, hashlib.sha256
@@ -697,474 +714,323 @@ def verify_stripe_signature(payload: bytes, sig_header: str) -> bool:
 def process_webhook(payload: bytes, sig_header: str):
     if not verify_stripe_signature(payload, sig_header):
         raise ValueError("Invalid Stripe signature")
-
     data = json.loads(payload)
-    event_type = data.get("type")
-
-    if event_type == "payment_intent.succeeded":
-        intent = data["data"]["object"]
-        # Safe parameterized update via ORM
-        update_subscription(user_id=intent["metadata"]["user_id"])
-
+    if data.get("type") == "payment_intent.succeeded":
+        update_subscription(user_id=data["data"]["object"]["metadata"]["user_id"])
     return {"status": "ok"}
 
 def generate_idempotency_key() -> str:
     return secrets.token_hex(32)
 `,
-    prompt: "Add a Stripe webhook handler with HMAC signature verification and rate limiting",
-  },
+  prompt:"Add a Stripe webhook handler with HMAC signature verification and rate limiting",
+},
 ];
 
-// ─── State ───────────────────────────────────────────────────────────
-let currentFile = 'webhook';
-let demoRunning = false;
-let demoTimer = null;
-let scanDebounce = null;
-let findings = [];
+// ── Notes ─────────────────────────────────────────────────────────
+const NOTES = [
+  "Shadow Developer intercepts your feature prompt before any code is written",
+  "The code scanner watches every keystroke -- real-time static analysis with 20+ security rules",
+  "Click 'SQL Injection' to see cursor.execute() flagged as CRITICAL instantly as code types",
+  "Each finding shows the exact line number, rule ID (INJ-001, SEC-002...) and a concrete fix",
+  "The gutter turns red on dangerous lines -- the threat is visible at a glance",
+  "Click 'Auth Bypass' -- DEBUG=True and os.system(shell=True) are both caught automatically",
+  "The right panel shows severity-coded cards: CRITICAL in red, HIGH in orange, MEDIUM in blue",
+  "Switch to Spec Audit -- type a feature description and Shadow Developer audits it before any code runs",
+  "The audit engine checks API drift, schema collisions, OWASP rules, and dependency version conflicts",
+  "Click 'Safe Code' -- zero findings. Shadow Developer only flags real issues, no false noise.",
+];
+let noteStep = 0;
 
-// ─── Init ─────────────────────────────────────────────────────────────
-window.onload = () => {
-  loadFile('webhook');
-  updateGutter();
-};
+function noteNav(dir) {
+  noteStep = Math.max(0, Math.min(NOTES.length - 1, noteStep + dir));
+  document.getElementById('notes-counter').textContent = `Step ${noteStep + 1} / ${NOTES.length}`;
+  document.getElementById('notes-text').textContent = NOTES[noteStep];
+}
 
-// ─── File loading ─────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────────
+let curFile = 'webhook', demoRunning = false, demoTimer = null;
+let scanTimer = null, findings = [];
+
+// ── Init ───────────────────────────────────────────────────────────
+window.onload = () => { loadFile('webhook'); };
+
+// ── File loading ───────────────────────────────────────────────────
 function loadFile(name) {
-  currentFile = name;
-  const editor = document.getElementById('code-editor');
-  editor.textContent = FILES[name] || '';
-  highlightSyntax();
+  curFile = name;
+  document.getElementById('ce').textContent = FILES[name] || '';
   updateGutter();
-  updateTabBar(name);
-  // Auto-scan on file load
-  clearTimeout(scanDebounce);
-  scanDebounce = setTimeout(runScan, 300);
+  document.querySelectorAll('.fi').forEach(el => el.classList.remove('on'));
+  const fi = document.getElementById('fi-' + name);
+  if (fi) fi.classList.add('on');
+  document.getElementById('tab-name').textContent = name + '.py';
+  document.getElementById('tb-title').textContent = 'ecommerce-platform-v2 \u2014 ' + name + '.py';
+  clearTimeout(scanTimer);
+  scanTimer = setTimeout(runScan, 400);
 }
 
-function updateTabBar(name) {
-  document.getElementById('tabbar').innerHTML = `
-    <div class="tab active">
-      <span class="tab-icon">🐍</span> ${name}.py <span class="close">✕</span>
-    </div>`;
-  document.getElementById('titlebar').querySelector('.title').textContent =
-    `shadow-developer -- ${name}.py`;
-}
-
-// ─── Gutter ───────────────────────────────────────────────────────────
+// ── Gutter ─────────────────────────────────────────────────────────
 function updateGutter() {
-  const editor = document.getElementById('code-editor');
-  const lines = editor.innerText.split('\n');
-  const gutter = document.getElementById('gutter');
-  gutter.innerHTML = lines.map((_, i) => {
-    const n = i + 1;
-    const f = findings.find(x => x.line === n);
-    const cls = f ? (f.severity === 'critical' ? 'gutter-critical' : 'gutter-high') : '';
-    return `<div class="${cls}" style="padding-right:12px">${n}</div>`;
+  const lines = document.getElementById('ce').innerText.split('\n');
+  const g = document.getElementById('gutter');
+  g.innerHTML = lines.map((_, i) => {
+    const n = i + 1, f = findings.find(x => x.line === n);
+    const cls = f ? (f.severity === 'critical' ? 'gc' : 'gh') : '';
+    return `<div class="${cls}">${n}</div>`;
   }).join('');
 }
 
-// ─── Syntax highlight (basic tokeniser) ──────────────────────────────
-function highlightSyntax() {
-  const editor = document.getElementById('code-editor');
-  let code = editor.innerText;
-
-  // Save cursor position
-  const sel = window.getSelection();
-  const offset = sel.rangeCount ? getCaretOffset(editor) : 0;
-
-  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  code = esc(code)
-    // Comments
-    .replace(/(#[^\n]*)/g, '<span class="cm">$1</span>')
-    // Strings
-    .replace(/("""[\s\S]*?"""|"""[\s\S]*?"""|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="st">$1</span>')
-    // Keywords
-    .replace(/\b(import|from|def|class|return|if|else|elif|for|while|with|as|try|except|finally|raise|pass|break|continue|and|or|not|in|is|lambda|yield|async|await|True|False|None)\b/g, '<span class="kw">$1</span>')
-    // Builtins / types
-    .replace(/\b(print|len|range|str|int|float|list|dict|tuple|set|bool|type|object|super|staticmethod|classmethod|property)\b/g, '<span class="nb">$1</span>')
-    // Class names (CapitalCase)
-    .replace(/\b([A-Z][a-zA-Z0-9_]+)\b/g, '<span class="cl">$1</span>')
-    // Function calls
-    .replace(/\b([a-z_][a-z_0-9]*)(?=\s*\()/g, '<span class="fn">$1</span>')
-    // Numbers
-    .replace(/\b(\d+\.?\d*)\b/g, '<span class="nb">$1</span>');
-
-  editor.innerHTML = code;
-
-  // Restore caret approximately
-  try { restoreCaretOffset(editor, offset); } catch(e) {}
-}
-
-function getCaretOffset(el) {
-  let offset = 0;
-  const sel = window.getSelection();
-  if (sel.rangeCount === 0) return 0;
-  const range = sel.getRangeAt(0).cloneRange();
-  range.selectNodeContents(el);
-  range.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
-  return range.toString().length;
-}
-
-function restoreCaretOffset(el, offset) {
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-  let node, pos = 0;
-  while ((node = walker.nextNode())) {
-    if (pos + node.length >= offset) {
-      const range = document.createRange();
-      range.setStart(node, offset - pos);
-      range.collapse(true);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      return;
-    }
-    pos += node.length;
-  }
-}
-
-// ─── Editor events ────────────────────────────────────────────────────
-function onEditorInput() {
+// ── Input ──────────────────────────────────────────────────────────
+function onInput() {
   updateGutter();
-  clearTimeout(scanDebounce);
-  scanDebounce = setTimeout(runScan, 800);
+  clearTimeout(scanTimer);
+  scanTimer = setTimeout(runScan, 750);
+}
+function onKey(e) {
+  if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '    '); }
 }
 
-function handleTab(e) {
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    document.execCommand('insertText', false, '    ');
-  }
-}
-
-// ─── Scan ─────────────────────────────────────────────────────────────
+// ── Scan ───────────────────────────────────────────────────────────
 async function runScan() {
-  const editor = document.getElementById('code-editor');
-  const code = editor.innerText;
+  const code = document.getElementById('ce').innerText;
   if (!code.trim()) return;
-
-  const btn = document.getElementById('scan-btn');
-  btn.innerHTML = '<div class="spinner"></div> Scanning…';
-
+  const btn = document.getElementById('scanbtn');
+  btn.innerHTML = '<div class="spin"></div> Scanning';
   try {
-    const resp = await fetch('/api/v1/scan/code', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ code, filename: currentFile + '.py' }),
+    const r = await fetch('/api/v1/scan/code', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code, filename: curFile + '.py' }),
     });
-    const data = await resp.json();
-    findings = data.findings || [];
-    renderFindings(data);
+    const d = await r.json();
+    findings = d.findings || [];
+    renderFindings(d);
     updateGutter();
-    updateStatusBar(data);
-  } catch(e) {
-    console.error('Scan failed', e);
-  } finally {
-    btn.innerHTML = '<div class="pulse"></div> Scan';
-  }
+    updateStatus(d);
+    updateMinimap();
+  } catch(e) { console.error(e); }
+  finally { btn.innerHTML = '<div class="pulse"></div> Scan'; }
 }
 
-function renderFindings(data) {
+function renderFindings(d) {
   const el = document.getElementById('scan-results');
-  const empty = document.getElementById('scan-empty');
-
-  if (!data.findings || data.findings.length === 0) {
-    empty.style.display = 'flex';
-    el.style.display = 'none';
-    el.innerHTML = '';
-    return;
+  const em = document.getElementById('scan-empty');
+  if (!d.findings || d.findings.length === 0) {
+    em.style.display = 'flex'; el.style.display = 'none'; el.innerHTML = ''; return;
   }
-
-  empty.style.display = 'none';
-  el.style.display = 'block';
-
-  const summary = `
-    <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted);font-weight:600">
-        ${data.scanned_files} file · ${data.total_lines} lines · <strong style="color:var(--text)">${data.total_findings} finding${data.total_findings !== 1 ? 's' : ''}</strong>
-      </span>
-      ${Object.entries(data.summary).map(([sev,count]) =>
-        `<span class="sev-badge ${sev}">${count} ${sev}</span>`
-      ).join('')}
-    </div>`;
-
-  const cards = data.findings.map(f => `
-    <div class="finding-card ${f.severity}"
-         onmouseenter="showTooltip(event,'${escJs(f.description)}')"
-         onmouseleave="hideTooltip()">
-      <div class="finding-header">
-        <span class="sev-badge ${f.severity}">${f.severity}</span>
-        <span class="finding-rule">${f.rule_id}</span>
-        <span class="finding-line">Line ${f.line}</span>
+  em.style.display = 'none'; el.style.display = 'block';
+  const sum = `<div class="scan-sum">
+    <span style="color:var(--tx);font-weight:600">${d.total_findings} finding${d.total_findings!==1?'s':''}</span>
+    <span>${d.scanned_files} file &middot; ${d.total_lines} lines</span>
+    ${Object.entries(d.summary||{}).map(([s,c]) => `<span class="sb3 ${s}">${c} ${s}</span>`).join('')}
+  </div>`;
+  const cards = d.findings.map(f => `
+    <div class="fc ${f.severity}"
+      onmouseenter="tip(event,'${esc(f.rule_id)}: ${esc(f.description)}')"
+      onmouseleave="hideTip()">
+      <div class="fh">
+        <span class="sb3 ${f.severity}">${f.severity}</span>
+        <span class="fr">${f.rule_id}</span>
+        <span class="fl">Line ${f.line}</span>
       </div>
-      <div class="finding-desc">${escHtml(f.description)}</div>
-      ${f.snippet ? `<div class="finding-snippet">${escHtml(f.snippet)}</div>` : ''}
-      <div class="finding-rem">💡 ${escHtml(f.remediation)}</div>
+      <div class="fd">${escH(f.description)}</div>
+      ${f.snippet ? `<div class="fsnip">${escH(f.snippet)}</div>` : ''}
+      <div class="frm">${escH(f.remediation)}</div>
     </div>`).join('');
-
-  el.innerHTML = summary + cards;
+  el.innerHTML = sum + cards;
   showTab('scan');
 }
 
-function updateStatusBar(data) {
-  const el = document.getElementById('status-issues');
-  const cnt = data.total_findings || 0;
-  const hasCrit = (data.summary?.critical || 0) > 0;
-  const hasHigh = (data.summary?.high || 0) > 0;
-  if (cnt === 0) {
-    el.textContent = '✓ 0 issues';
-    el.className = 'item clean';
-  } else {
-    el.textContent = `⚠ ${cnt} issue${cnt>1?'s':''} (${Object.entries(data.summary).map(([s,c])=>`${c} ${s}`).join(', ')})`;
-    el.className = hasCrit ? 'item has-critical' : hasHigh ? 'item has-high' : 'item';
+function updateStatus(d) {
+  const el = document.getElementById('si-iss'), cnt = d.total_findings || 0;
+  const hasCrit = (d.summary?.critical || 0) > 0, hasHigh = (d.summary?.high || 0) > 0;
+  if (cnt === 0) { el.textContent = '0 issues'; el.className = 'si ok'; }
+  else {
+    el.textContent = `${cnt} issue${cnt>1?'s':''}`;
+    el.className = hasCrit ? 'si crit' : hasHigh ? 'si high' : 'si';
   }
   // Update file badge
-  const badge = document.getElementById(`badge-${currentFile}`);
-  if (badge) {
+  const bdg = document.getElementById('bdg-' + curFile);
+  if (bdg) {
     if (cnt === 0) {
-      badge.className = 'badge-ok'; badge.textContent = '✓';
+      bdg.className = 'bw ok';
+      bdg.innerHTML = '<svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-check"/></svg>';
     } else {
-      badge.className = 'badge-warn'; badge.textContent = `⚠ ${cnt}`;
+      bdg.className = 'bw warn'; bdg.textContent = cnt;
     }
   }
-  updateMinimap();
 }
 
-// ─── Audit panel ──────────────────────────────────────────────────────
-async function runAudit() {
-  const prompt = document.getElementById('audit-prompt').value.trim();
-  if (!prompt) return;
-  const btn = document.getElementById('audit-run-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="margin:0 auto"></div>';
-
-  try {
-    const resp = await fetch('/api/v1/intercept', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        prompt,
-        project_id: 'ecommerce-platform-v2',
-        author: 'hamid.khan',
-        branch: 'demo',
-      }),
-    });
-    const data = await resp.json();
-    renderAuditResult(data);
-  } catch(e) {
-    document.getElementById('audit-results').innerHTML =
-      `<div style="padding:12px;color:var(--red);font-size:12px">Failed to connect to Shadow Developer API.</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '⚡ Run Shadow Audit';
-  }
-}
-
-function renderAuditResult(data) {
-  const el = document.getElementById('audit-results');
-  const statusLabel = {
-    passed: '✓ PASSED', needs_revision: '⚠ NEEDS REVISION', failed: '✕ FAILED'
-  }[data.status] || data.status;
-
-  const conflicts = (data.conflicts || []).map(c => `
-    <div class="finding-card ${c.severity}">
-      <div class="finding-header">
-        <span class="sev-badge ${c.severity}">${c.severity}</span>
-        <span class="finding-rule">${c.category}</span>
-      </div>
-      <div class="finding-desc">${escHtml(c.description)}</div>
-      ${c.remediation ? `<div class="finding-rem">💡 ${escHtml(c.remediation)}</div>` : ''}
-    </div>`).join('');
-
-  const tests = (data.recommended_tests || []).map(t =>
-    `<div style="font-size:11px;color:var(--muted);padding:3px 0;border-left:2px solid var(--border);padding-left:8px;margin:3px 0">▸ ${escHtml(t)}</div>`
-  ).join('');
-
-  el.innerHTML = `
-    <div class="audit-result">
-      <div class="audit-status ${data.status}">${statusLabel}</div>
-      <div class="audit-msg">${escHtml(data.message)}</div>
-      ${conflicts}
-      ${tests ? `<div style="padding-top:8px;border-top:1px solid var(--border);margin-top:8px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;letter-spacing:.8px;text-transform:uppercase">Recommended Tests</div>
-        ${tests}
-      </div>` : ''}
-    </div>`;
-}
-
-// ─── History tab ──────────────────────────────────────────────────────
-async function loadHistory() {
-  const el = document.getElementById('history-results');
-  try {
-    const resp = await fetch('/api/v1/history?limit=10');
-    const data = await resp.json();
-    if (!data.audits || data.audits.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div class="msg">No audit history yet.<br>Run a spec audit to see results here.</div></div>`;
-      return;
-    }
-    el.innerHTML = data.audits.map(a => `
-      <div class="finding-card ${a.status === 'failed' ? 'critical' : a.status === 'needs_revision' ? 'high' : 'low'}"
-           style="cursor:pointer" onclick="fillAuditPrompt('${escJs(a.prompt_summary)}')">
-        <div class="finding-header">
-          <span class="sev-badge ${a.status === 'failed' ? 'critical' : a.status === 'needs_revision' ? 'high' : 'low'}">
-            ${a.status.replace('_',' ')}
-          </span>
-          <span class="finding-rule">${escHtml(a.project_id)}</span>
-          <span class="finding-line">${a.conflicts} issues</span>
-        </div>
-        <div class="finding-desc" style="font-size:11px">${escHtml(a.prompt_summary)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px">${a.author} · ${a.branch} · ${new Date(a.created_at).toLocaleString()}</div>
-      </div>`).join('');
-  } catch(e) {
-    el.innerHTML = `<div style="padding:12px;color:var(--red);font-size:12px">Failed to load history.</div>`;
-  }
-}
-
-function fillAuditPrompt(text) {
-  document.getElementById('audit-prompt').value = text;
-  showTab('audit');
-}
-
-// ─── Tabs ─────────────────────────────────────────────────────────────
-function showTab(name) {
-  ['scan','audit','history'].forEach(t => {
-    document.getElementById(`tab-${t}`).style.display = t === name ? 'block' : 'none';
-    document.getElementById(`rptab-${t}`).classList.toggle('active', t === name);
+// ── Minimap ────────────────────────────────────────────────────────
+function updateMinimap() {
+  const cv = document.getElementById('mc');
+  const h = document.getElementById('ea').offsetHeight;
+  cv.width = 72; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#080c11'; ctx.fillRect(0,0,72,h);
+  const lines = document.getElementById('ce').innerText.split('\n').length;
+  findings.forEach(f => {
+    ctx.fillStyle = f.severity==='critical'?'#f85149':f.severity==='high'?'#d29922':'#58a6ff';
+    const y = Math.round((f.line / Math.max(lines,1)) * h);
+    ctx.fillRect(0, y, 72, 2);
   });
 }
 
-// ─── Demo script ──────────────────────────────────────────────────────
+// ── Audit ──────────────────────────────────────────────────────────
+async function runAudit() {
+  const prompt = document.getElementById('ap').value.trim();
+  if (!prompt) return;
+  const btn = document.getElementById('aub');
+  btn.disabled = true; btn.innerHTML = '<div class="spin"></div>';
+  try {
+    const r = await fetch('/api/v1/intercept', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt, project_id:'ecommerce-platform-v2', author:'hamid.khan', branch:'demo' }),
+    });
+    renderAudit(await r.json());
+  } catch(e) {
+    document.getElementById('audit-results').innerHTML =
+      '<div style="padding:12px;color:var(--rd);font-size:12px">Connection failed. Is the server running?</div>';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-shield"/></svg> Run Shadow Audit';
+  }
+}
+
+function renderAudit(d) {
+  const lbl = {passed:'Passed', needs_revision:'Needs Revision', failed:'Failed'}[d.status] || d.status;
+  const cfl = (d.conflicts||[]).map(c => `
+    <div class="fc ${c.severity}">
+      <div class="fh"><span class="sb3 ${c.severity}">${c.severity}</span><span class="fr">${c.category}</span></div>
+      <div class="fd">${escH(c.description)}</div>
+      ${c.remediation ? `<div class="frm">${escH(c.remediation)}</div>` : ''}
+    </div>`).join('');
+  const tests = (d.recommended_tests||[]).map(t =>
+    `<div style="font-size:11px;color:var(--mt);padding:3px 0;border-left:2px solid var(--bd);padding-left:8px;margin:2px 0">${escH(t)}</div>`
+  ).join('');
+  document.getElementById('audit-results').innerHTML = `
+    <div class="ar">
+      <div class="ast ${d.status}">${lbl}</div>
+      <div class="am">${escH(d.message)}</div>
+      ${cfl}
+      ${tests ? `<div style="padding-top:8px;border-top:1px solid var(--bd);margin-top:8px">
+        <div style="font-size:10px;color:var(--mt);margin-bottom:4px;letter-spacing:.8px;text-transform:uppercase">Recommended Tests</div>
+        ${tests}</div>` : ''}
+    </div>`;
+}
+
+// ── History ────────────────────────────────────────────────────────
+async function loadHistory() {
+  const el = document.getElementById('history-results');
+  try {
+    const r = await fetch('/api/v1/history?limit=12');
+    const d = await r.json();
+    if (!d.audits || d.audits.length === 0) {
+      el.innerHTML = '<div class="es"><svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor"><use href="#ic-history"/></svg><p>No history yet.<br>Run a spec audit to see results.</p></div>';
+      return;
+    }
+    el.innerHTML = d.audits.map(a => `
+      <div class="hc ${a.status}" onclick="document.getElementById('ap').value='${esc(a.prompt_summary)}';showTab('audit')">
+        <div class="fh">
+          <span class="sb3 ${a.status==='failed'?'critical':a.status==='needs_revision'?'high':'low'}">${a.status.replace('_',' ')}</span>
+          <span class="fr">${escH(a.project_id)}</span>
+          <span class="fl">${a.conflicts} issues</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--tx);margin-bottom:3px">${escH(a.prompt_summary)}</div>
+        <div style="font-size:10px;color:var(--mt)">${a.author} &middot; ${a.branch} &middot; ${new Date(a.created_at).toLocaleString()}</div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div style="padding:12px;color:var(--rd);font-size:12px">Failed to load history.</div>'; }
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────
+function showTab(t) {
+  ['scan','audit','history'].forEach(n => {
+    document.getElementById('tab-'+n).style.display = n===t ? 'block' : 'none';
+    document.getElementById('rptab-'+n).classList.toggle('on', n===t);
+  });
+}
+
+// ── Activity ───────────────────────────────────────────────────────
+function setAct(b) {
+  document.querySelectorAll('.abt').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+}
+
+// ── Demo ───────────────────────────────────────────────────────────
 function runDemo(idx) {
   if (demoRunning) stopDemo();
-  const demo = DEMOS[idx];
+  const demo = DEMOS[idx], btn = document.getElementById('db'+idx);
+  document.querySelectorAll('.dmo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
   demoRunning = true;
-  document.getElementById('stop-btn').style.display = 'inline-flex';
-  document.getElementById('demo-label').textContent = `Running: ${demo.label}`;
-
-  // Clear editor
-  const editor = document.getElementById('code-editor');
-  editor.textContent = '';
-  findings = [];
+  document.getElementById('stop-btn').style.display = 'inline-block';
+  document.getElementById('ap').value = demo.prompt;
+  const ce = document.getElementById('ce');
+  ce.textContent = ''; findings = [];
   document.getElementById('scan-results').style.display = 'none';
   document.getElementById('scan-empty').style.display = 'flex';
-  updateGutter();
-  updateStatusBar({ total_findings: 0, summary: {} });
-
-  // Auto-fill audit prompt
-  document.getElementById('audit-prompt').value = demo.prompt;
-
-  const code = demo.code;
-  let i = 0;
-  const progress = document.getElementById('demo-progress-inner');
+  updateGutter(); updateStatus({total_findings:0,summary:{}});
+  const code = demo.code; let i = 0;
+  const dpi = document.getElementById('dpi');
 
   function typeNext() {
     if (!demoRunning || i >= code.length) {
       if (i >= code.length) {
-        // Final scan + audit
         runScan();
-        setTimeout(() => {
-          showTab('audit');
-          runAudit();
-        }, 1200);
-        document.getElementById('demo-label').textContent = `✓ Done: ${demo.label} -- watch the findings panel`;
+        setTimeout(() => { showTab('audit'); runAudit(); }, 1100);
+        document.querySelectorAll('.dmo-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('stop-btn').style.display = 'none';
         demoRunning = false;
       }
       return;
     }
-
-    // Type a character
-    const char = code[i++];
-    editor.textContent += char;
-    progress.style.width = (i / code.length * 100) + '%';
-
-    // Gutter update every newline
-    if (char === '\n') updateGutter();
-
-    // Scan mid-way to show progressive detection
-    if (i === Math.floor(code.length * 0.45) || i === Math.floor(code.length * 0.75)) {
-      runScan();
-    }
-
-    // Vary speed: slow on newlines, fast on code
-    const delay = char === '\n' ? 60 : char === ' ' ? 12 : 18;
-    demoTimer = setTimeout(typeNext, delay);
+    const ch = code[i++];
+    ce.textContent += ch;
+    dpi.style.width = (i / code.length * 100) + '%';
+    if (ch === '\n') updateGutter();
+    if (i === Math.floor(code.length * .45) || i === Math.floor(code.length * .72)) runScan();
+    demoTimer = setTimeout(typeNext, ch === '\n' ? 55 : ch === ' ' ? 10 : 16);
   }
-
   typeNext();
 }
 
 function stopDemo() {
-  demoRunning = false;
-  clearTimeout(demoTimer);
+  demoRunning = false; clearTimeout(demoTimer);
+  document.querySelectorAll('.dmo-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('stop-btn').style.display = 'none';
-  document.getElementById('demo-label').textContent = 'Demo stopped.';
-  document.getElementById('demo-progress-inner').style.width = '0%';
+  document.getElementById('dpi').style.width = '0%';
 }
 
-// ─── Activity bar ─────────────────────────────────────────────────────
-function setActivity(btn) {
-  document.querySelectorAll('.act-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+// ── Tooltip ────────────────────────────────────────────────────────
+function tip(e, txt) {
+  const el = document.getElementById('tip');
+  el.textContent = txt; el.style.display = 'block';
+  el.style.left = Math.min(e.clientX + 12, window.innerWidth - 280) + 'px';
+  el.style.top = (e.clientY + 14) + 'px';
 }
+function hideTip() { document.getElementById('tip').style.display = 'none'; }
 
-// ─── Tooltip ──────────────────────────────────────────────────────────
-function showTooltip(e, text) {
-  const tip = document.getElementById('tooltip');
-  tip.textContent = text;
-  tip.style.display = 'block';
-  tip.style.left = Math.min(e.clientX + 12, window.innerWidth - 300) + 'px';
-  tip.style.top  = (e.clientY + 16) + 'px';
-}
-function hideTooltip() {
-  document.getElementById('tooltip').style.display = 'none';
-}
-
-// ─── Minimap ──────────────────────────────────────────────────────────
-function updateMinimap() {
-  const canvas = document.getElementById('minimap-canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = 80; canvas.height = document.getElementById('editor-area').offsetHeight;
-  ctx.fillStyle = '#0a0f16';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // Draw finding markers
-  findings.forEach(f => {
-    ctx.fillStyle = f.severity === 'critical' ? '#f85149' : f.severity === 'high' ? '#d29922' : '#58a6ff';
-    ctx.fillRect(0, (f.line / 50) * canvas.height, canvas.width, 2);
-  });
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function escJs(s) {
-  return String(s).replace(/'/g,"\\'").replace(/\n/g,'\\n');
-}
+// ── Helpers ────────────────────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s).replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
 
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-// Track cursor position in status bar
+// Cursor tracking
 document.addEventListener('selectionchange', () => {
-  const editor = document.getElementById('code-editor');
-  if (!document.activeElement || document.activeElement !== editor) return;
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return;
-  const range = sel.getRangeAt(0).cloneRange();
-  range.collapse(true);
-  const preceding = range.toString();
-  const lines = getCaretOffset(editor);
-  const before = editor.innerText.substring(0, lines);
-  const lineNo = (before.match(/\n/g) || []).length + 1;
-  const lastNewline = before.lastIndexOf('\n');
-  const col = before.length - lastNewline;
-  document.getElementById('status-ln').textContent = lineNo;
-  document.getElementById('status-col').textContent = col;
+  const ce = document.getElementById('ce');
+  if (document.activeElement !== ce) return;
+  const sel = window.getSelection(); if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0).cloneRange(); range.collapse(true);
+  const tmp = document.createElement('span'); range.insertNode(tmp);
+  const before = ce.innerText.substring(0, ce.innerText.indexOf(tmp.textContent || ''));
+  tmp.remove();
+  const ln = (before.match(/\n/g)||[]).length + 1;
+  const col = before.length - before.lastIndexOf('\n');
+  document.getElementById('si-ln').textContent = ln;
+  document.getElementById('si-col').textContent = col;
 });
 </script>
 </body>

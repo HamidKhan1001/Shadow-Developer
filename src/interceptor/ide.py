@@ -15,3 +15,10 @@ async def serve_ide():
     """Serve the Shadow Developer Web IDE."""
     html = (_STATIC / "ide.html").read_text(encoding="utf-8")
     return HTMLResponse(html)
+
+
+@ide_router.get("/landing", include_in_schema=False)
+async def serve_landing():
+    """Serve the Shadow Developer landing page."""
+    html = (_STATIC / "landing.html").read_text(encoding="utf-8")
+    return HTMLResponse(html)
