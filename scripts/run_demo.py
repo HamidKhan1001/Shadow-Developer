@@ -29,7 +29,7 @@ STATUS_STYLE = {
 
 
 @cli.command()
-def main(url: str = typer.Option("http://localhost:8000", help="Base URL of the Shadow Developer server")):
+def main(url: str = typer.Argument("http://localhost:8000", help="Base URL of the Shadow Developer server")):
     """Run all demo prompts and display results."""
     demo_file = Path(__file__).parent.parent / "data" / "demo_prompts.json"
     demos = json.loads(demo_file.read_text())

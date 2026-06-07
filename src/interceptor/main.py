@@ -9,9 +9,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from .router import router
 from ..config import get_settings
+from ..database import init_db
 
 settings = get_settings()
 
@@ -24,17 +26,19 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Shadow Developer Interceptor starting up (env=%s)", settings.app_env)
+    logger.info("Shadow Developer starting up (env=%s)", settings.app_env)
+    await init_db()
+    logger.info("SQLite database ready at shadow_dev.db")
     yield
-    logger.info("Shadow Developer Interceptor shutting down")
+    logger.info("Shadow Developer shutting down")
 
 
 app = FastAPI(
-    title="Shadow Developer API",
+    title="Shadow Developer",
     description=(
-        "Autonomous, spec-driven audit agent that intercepts AI-generated feature "
-        "specifications and validates them for security, API drift, and architectural "
-        "consistency before any production code is written."
+        "Autonomous spec-driven audit agent. Intercepts AI-generated feature prompts "
+        "and validates them for security flaws, API drift, and architectural conflicts "
+        "before any production code is written."
     ),
     version="0.1.0",
     lifespan=lifespan,
@@ -51,3 +55,9 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+
+@app.get("/", include_in_schema=False)
+async def root_redirect():
+    """Redirect bare root to the API landing page."""
+    return RedirectResponse(url="/api/v1/")
