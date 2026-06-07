@@ -4,15 +4,57 @@ Interceptor API routes — the entry point for all developer prompts.
 import uuid
 import json
 import logging
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from typing import Optional
 
 from .models import PromptInterceptRequest, AuditResult, AuditStatus, ConflictDetail
 from ..auditor.engine import AuditEngine
 from ..database import save_audit, get_audit, list_audits, AuditRecord
+from ..monitor.code_scanner import CodeScanner
+from ..monitor.secret_scanner import SecretScanner
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["interceptor"])
+
+_audit_engine = AuditEngine()
+_code_scanner = CodeScanner()
+_secret_scanner = SecretScanner()
+
+
+# ------------------------------------------------------------------ #
+# Request models for scan endpoints                                    #
+# ------------------------------------------------------------------ #
+
+class CodeScanRequest(BaseModel):
+    """Scan an inline code snippet or a directory path."""
+    code: Optional[str] = None
+    path: Optional[str] = None
+    filename: Optional[str] = "<snippet>"
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "code": "password = 'hunter2'\ncursor.execute(f'SELECT * FROM users WHERE id={user_id}')",
+                    "filename": "example.py"
+                }
+            ]
+        }
+    }
+
+
+class SecretScanRequest(BaseModel):
+    """Scan a directory for leaked secrets and .gitignore gaps."""
+    path: str = "."
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"path": "./src"}]
+        }
+    }
 
 _audit_engine = AuditEngine()
 
@@ -30,37 +72,74 @@ async def root():
     <head>
       <title>Shadow Developer</title>
       <style>
-        body { font-family: system-ui, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 20px; background: #0d1117; color: #e6edf3; }
-        h1 { color: #58a6ff; } h2 { color: #8b949e; font-weight: 400; }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; max-width: 860px; margin: 60px auto; padding: 0 24px; background: #0d1117; color: #e6edf3; }
+        h1 { color: #58a6ff; margin-bottom: 4px; }
+        h2 { color: #8b949e; font-weight: 400; margin-top: 0; }
+        h3 { color: #cdd9e5; border-bottom: 1px solid #30363d; padding-bottom: 6px; }
         a { color: #58a6ff; text-decoration: none; } a:hover { text-decoration: underline; }
-        .badge { display: inline-block; background: #238636; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; margin: 4px; }
-        .badge.warn { background: #9e6a03; } .badge.fail { background: #da3633; }
-        ul { line-height: 2; } code { background: #161b22; padding: 2px 8px; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+        .card h4 { margin: 0 0 8px; color: #58a6ff; }
+        .card ul { margin: 0; padding-left: 18px; line-height: 2; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 3px; }
+        .green { background: #1a4731; color: #3fb950; border: 1px solid #238636; }
+        .yellow { background: #3d2c00; color: #d29922; border: 1px solid #9e6a03; }
+        .red { background: #3d1c1c; color: #f85149; border: 1px solid #da3633; }
+        .blue { background: #0d2149; color: #58a6ff; border: 1px solid #1f6feb; }
+        code { background: #161b22; border: 1px solid #30363d; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+        pre { background: #161b22; border: 1px solid #30363d; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+        .tag { display: inline-block; background: #21262d; color: #8b949e; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 6px; }
       </style>
     </head>
     <body>
       <h1>🕵️ Shadow Developer</h1>
-      <h2>Autonomous Spec-Driven Audit Agent</h2>
-      <p>Intercepts AI-generated feature prompts and audits them for security flaws,
-         API drift, and architectural conflicts — before a single line of code is written.</p>
-      <h3>Quick Links</h3>
-      <ul>
-        <li><a href="/docs">📖 Swagger UI — try the API live</a></li>
-        <li><a href="/redoc">📚 ReDoc — full API reference</a></li>
-        <li><a href="/api/v1/history">🗂 Audit History (JSON)</a></li>
-        <li><a href="/api/v1/health">💚 Health Check</a></li>
-      </ul>
-      <h3>Try it — POST to <code>/api/v1/intercept</code></h3>
-      <pre style="background:#161b22;padding:16px;border-radius:8px;overflow:auto">{
+      <h2>Autonomous Spec-Driven Audit Agent &amp; Code Security Monitor</h2>
+
+      <div class="grid">
+        <div class="card">
+          <h4>📋 Spec Audit</h4>
+          <ul>
+            <li><a href="/docs">Swagger UI — try the API live</a></li>
+            <li><a href="/redoc">ReDoc — full reference</a></li>
+            <li><a href="/api/v1/history">Audit History</a></li>
+            <li><a href="/api/v1/health">Health Check</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🔍 Code Monitor</h4>
+          <ul>
+            <li><a href="/docs#/monitor/scan_code_api_v1_scan_code_post">Scan Code Snippet</a></li>
+            <li><a href="/docs#/monitor/scan_secrets_api_v1_scan_secrets_post">Scan for Secrets</a></li>
+            <li><a href="/api/v1/scan/gitignore">.gitignore Audit</a></li>
+            <li><a href="/api/v1/scan/demo">Run Demo Scan</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Try the Spec Auditor</h3>
+      <pre>POST /api/v1/intercept
+{
   "prompt": "Add a payment webhook route without signature verification",
   "project_id": "ecommerce-platform-v2",
   "author": "hamid.khan",
   "branch": "feature/webhooks"
 }</pre>
+
+      <h3>Try the Code Monitor</h3>
+      <pre>POST /api/v1/scan/code
+{
+  "code": "password = 'hunter2'\\ncursor.execute(f\\"SELECT * FROM users WHERE id={uid}\\")",
+  "filename": "auth.py"
+}</pre>
+
       <h3>Status Legend</h3>
-      <span class="badge">PASSED</span>
-      <span class="badge warn">NEEDS REVISION</span>
-      <span class="badge fail">FAILED</span>
+      <span class="badge green">PASSED</span>
+      <span class="badge yellow">NEEDS REVISION</span>
+      <span class="badge red">FAILED</span>
+      <span class="badge red">CRITICAL</span>
+      <span class="badge yellow">HIGH</span>
+      <span class="badge blue">MEDIUM</span>
     </body>
     </html>
     """
@@ -184,6 +263,137 @@ async def seed_demo(background_tasks: BackgroundTasks):
 @router.get("/health", tags=["ops"], summary="Health check")
 async def health():
     return {"status": "ok", "service": "shadow-developer-interceptor"}
+
+
+# ------------------------------------------------------------------ #
+# Code Monitor — scan for suspicious / security code                  #
+# ------------------------------------------------------------------ #
+
+@router.post("/scan/code", tags=["monitor"], summary="Scan code for security issues")
+async def scan_code(request: CodeScanRequest):
+    """
+    Static security scanner — highlights suspicious and security-relevant
+    code patterns with exact file paths, line numbers, and severity.
+
+    Supports:
+    - **code**: inline Python snippet to scan
+    - **path**: directory or file path to scan on disk
+    """
+    if not request.code and not request.path:
+        raise HTTPException(status_code=400, detail="Provide either 'code' (snippet) or 'path' (directory).")
+
+    if request.code:
+        result = _code_scanner.scan_code_snippet(request.code, filename=request.filename or "<snippet>")
+    else:
+        scan_path = Path(request.path)
+        if not scan_path.exists():
+            raise HTTPException(status_code=404, detail=f"Path '{request.path}' does not exist.")
+        if scan_path.is_file():
+            result = _code_scanner.scan_file(str(scan_path))
+        else:
+            result = _code_scanner.scan_directory(str(scan_path))
+
+    return result.to_dict()
+
+
+@router.post("/scan/secrets", tags=["monitor"], summary="Scan for leaked secrets and .env exposure")
+async def scan_secrets(request: SecretScanRequest):
+    """
+    Secret & environment scanner.
+
+    - Detects hardcoded API keys, passwords, tokens, private keys
+    - Audits .gitignore for missing security patterns
+    - Flags .env files that are not gitignored
+    """
+    scan_path = Path(request.path)
+    if not scan_path.exists():
+        raise HTTPException(status_code=404, detail=f"Path '{request.path}' does not exist.")
+
+    result = _secret_scanner.scan_directory(str(scan_path))
+    return result.to_dict()
+
+
+@router.get("/scan/gitignore", tags=["monitor"], summary="Audit .gitignore completeness")
+async def audit_gitignore(path: str = "."):
+    """
+    Checks the .gitignore at the given path for missing security-critical patterns
+    like .env, *.key, *.pem, venv/, etc.
+    """
+    scan_path = Path(path)
+    if not scan_path.exists():
+        raise HTTPException(status_code=404, detail=f"Path '{path}' does not exist.")
+
+    report = _secret_scanner.audit_gitignore(str(scan_path))
+    return {
+        "gitignore_found": report.found,
+        "is_sufficient": report.is_sufficient,
+        "present_patterns": report.present_patterns,
+        "missing_patterns": report.missing_patterns,
+        "recommendation": (
+            "Add missing patterns to .gitignore to prevent accidental secret commits."
+            if report.missing_patterns else
+            ".gitignore looks good for security-sensitive patterns."
+        ),
+    }
+
+
+@router.post("/scan/demo", tags=["monitor"], summary="Run demo code scan with intentionally bad code")
+async def scan_demo():
+    """
+    Runs the code scanner against demo snippets that contain intentional
+    security issues — great for showing what the monitor catches live.
+    """
+    demo_snippets = [
+        {
+            "label": "SQL Injection + hardcoded password",
+            "code": (
+                "password = 'supersecret123'\n"
+                "api_key = 'sk-abcdef1234567890abcdef'\n"
+                "cursor.execute(f\"SELECT * FROM users WHERE id={user_id}\")\n"
+                "result = cursor.execute(\"SELECT * FROM orders WHERE name='\" + name + \"'\")\n"
+            ),
+            "filename": "demo_bad_code.py",
+        },
+        {
+            "label": "Auth bypass + weak crypto + debug mode",
+            "code": (
+                "DEBUG = True\n"
+                "SECRET_KEY = 'abc123'\n"
+                "import hashlib\n"
+                "token_hash = hashlib.md5(token.encode()).hexdigest()\n"
+                "# TODO: skip auth for now\n"
+                "subprocess.call('rm -rf /tmp/' + user_dir, shell=True)\n"
+            ),
+            "filename": "demo_auth_issues.py",
+        },
+        {
+            "label": "Safe code — should have zero findings",
+            "code": (
+                "import os\n"
+                "import hashlib\n"
+                "import secrets\n"
+                "password = os.getenv('DB_PASSWORD')\n"
+                "api_key = os.getenv('API_KEY')\n"
+                "token = secrets.token_hex(32)\n"
+                "token_hash = hashlib.sha256(token.encode()).hexdigest()\n"
+            ),
+            "filename": "demo_safe_code.py",
+        },
+    ]
+
+    results = []
+    for demo in demo_snippets:
+        scan = _code_scanner.scan_code_snippet(demo["code"], filename=demo["filename"])
+        results.append({
+            "label": demo["label"],
+            "filename": demo["filename"],
+            "total_findings": len(scan.findings),
+            "summary": scan.summary,
+            "findings": [f.to_dict() for f in scan.findings],
+        })
+
+    return {"demo_scans": results}
+
 
 
 # ------------------------------------------------------------------ #

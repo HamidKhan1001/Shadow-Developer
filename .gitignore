@@ -1,6 +1,25 @@
-# Environment
+# ---------------------------------------------------------------
+# Shadow Developer — .gitignore
+# ---------------------------------------------------------------
+
+# Environment & secrets — NEVER commit these
 .env
-*.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+serviceAccount.json
+config/secrets.yml
+config/secrets.yaml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+shadow_dev.db
 
 # Python
 __pycache__/
@@ -23,31 +42,41 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
+# Virtual Environments
 venv/
 env/
 ENV/
+.venv/
+.env/
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.swo
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverrideIcon
 
-# Testing
+# Testing & Coverage
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
-
-# OS
-.DS_Store
-Thumbs.db
+coverage.xml
+*.coveragerc
 
 # Logs
 logs/
 *.log
 
-# Data
+# Data / cache
 data/vector_cache/
+.cache/
+
+# Distribution
+*.whl
+*.tar.gz
